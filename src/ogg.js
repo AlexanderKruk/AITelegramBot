@@ -6,7 +6,7 @@ import ffmpeg from 'fluent-ffmpeg';
 import installer from '@ffmpeg-installer/ffmpeg'
 import { removeFile } from './utils.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
+export const __dirname = dirname(fileURLToPath(import.meta.url))
 
 class OggConverter {
   constructor() {

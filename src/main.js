@@ -35,7 +35,7 @@ bot.command('start', async (ctx) => {
   ctx.reply("Hi. Let's practice English. Choose topic")
 })
 bot.command('new', async (ctx) => {
-  ctx.session = { ...structuredClone(INITIAL_SESSION), settings: ctx.session.settings }
+  ctx.session = { ...structuredClone(INITIAL_SESSION), settings: ctx?.session?.settings ||  { hideQuestion: false, grammarCheck: true }}
   ctx.reply("Hi. Let's practice English. Choose topic")
 })
 

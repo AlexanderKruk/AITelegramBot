@@ -1,4 +1,5 @@
 import { Telegraf, session } from 'telegraf';
+import LocalSession from 'telegraf-session-local'
 import config from 'config';
 import { message } from 'telegraf/filters'
 import { ogg } from './ogg.js';
@@ -8,7 +9,7 @@ import { spoiler } from 'telegraf/format'
 
 const bot = new Telegraf(config.get('TELEGRAM_TOKEN'))
 
-bot.use(session());
+bot.use((new LocalSession({ database: 'sessions.json' })).middleware())
 
 // const INITIAL_SESSION = {
 //   messages: [{role: openAi.roles.SYSTEM, content: "Imagine that you are my best male friend, we are having a conversation. I want to hear words of support and clarifying questions. The answer should be a maximum of one or two simple and short sentences."}]
@@ -20,35 +21,37 @@ bot.use(session());
 
 const INITIAL_SESSION = {
   messages: [{ role: openAi.roles.SYSTEM, content: "I am studying English. Let's practice some dialogues. Answer simply, with maximum 3 sentences. Ask question at the end." }],
-  settings: { hideQuestion: false }
+  settings: { hideQuestion: false, grammarCheck: true }
 }
 
 bot.telegram.setMyCommands([
   { command: '/new', description: 'Start new dialog' },
-  { command: '/hide', description: 'Hide or show bot question' },
+  { command: '/spoilers', description: 'Spoilers' },
+  { command: '/check', description: 'Check grammar'},
 ])
 
-const greetings = async (ctx) => {
-  ctx.reply("Hi. Let's practice English. Choose topic")
-}
-
 bot.command('start', async (ctx) => {
-  ctx.session = { ...INITIAL_SESSION }
-  await greetings(ctx)
+  ctx.session = structuredClone(INITIAL_SESSION)
+  ctx.reply("Hi. Let's practice English. Choose topic")
 })
 bot.command('new', async (ctx) => {
-  ctx.session = {...INITIAL_SESSION}
-  await greetings(ctx)
+  ctx.session = { ...structuredClone(INITIAL_SESSION), settings: ctx.session.settings }
+  ctx.reply("Hi. Let's practice English. Choose topic")
 })
 
-bot.command('hide', async (ctx) => {
+bot.command('spoilers', async (ctx) => {
   ctx.session.settings.hideQuestion = !ctx.session.settings.hideQuestion;
+  ctx.session.settings.hideQuestion ? await ctx.reply('Spoiler activated') : await ctx.reply('Spoiler disabled');
+})
+
+bot.command('check', async (ctx) => {
+  ctx.session.settings.checkGrammar = !ctx.session.settings.checkGrammar;
+  ctx.session.settings.hideQuestion ? await ctx.reply('Grammar check activated') : await ctx.reply('Grammar check disabled');
 })
 
 bot.on(message('voice'), async (ctx) => {
   try {
-    ctx.session ??= INITIAL_SESSION;
-    console.log('text session', ctx.session);
+    ctx.session ??= structuredClone(INITIAL_SESSION);
     const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id)
     const userId = ctx.message.from.id;
     const oggPath = await ogg.create(link.href, userId);
@@ -75,8 +78,7 @@ bot.on(message('voice'), async (ctx) => {
 
 bot.on(message('text'), async (ctx) => {
   try {
-    ctx.session ??= INITIAL_SESSION
-    console.log('text session', ctx.session);
+    ctx.session ??= structuredClone(INITIAL_SESSION);
     const grammar = await openAi.chat({
       messages: [
         { role: openAi.roles.SYSTEM, content: "Correct my spelling and grammar." },

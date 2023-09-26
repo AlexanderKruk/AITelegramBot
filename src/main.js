@@ -26,8 +26,8 @@ const INITIAL_SESSION = {
 
 bot.telegram.setMyCommands([
   { command: '/new', description: 'Start new dialog' },
-  { command: '/spoilers', description: 'Spoilers' },
-  { command: '/check', description: 'Check grammar'},
+  { command: '/spoilers', description: 'Hide or show text answers' },
+  { command: '/check', description: 'Grammar check'},
 ])
 
 bot.command('start', async (ctx) => {
@@ -45,8 +45,8 @@ bot.command('spoilers', async (ctx) => {
 })
 
 bot.command('check', async (ctx) => {
-  ctx.session.settings.checkGrammar = !ctx.session.settings.checkGrammar;
-  ctx.session.settings.hideQuestion ? await ctx.reply('Grammar check activated') : await ctx.reply('Grammar check disabled');
+  ctx.session.settings.grammarCheck = !ctx.session.settings.grammarCheck;
+  ctx.session.settings.grammarCheck ? await ctx.reply('Grammar check activated') : await ctx.reply('Grammar check disabled');
 })
 
 bot.on(message('voice'), async (ctx) => {
@@ -79,12 +79,14 @@ bot.on(message('voice'), async (ctx) => {
 bot.on(message('text'), async (ctx) => {
   try {
     ctx.session ??= structuredClone(INITIAL_SESSION);
-    const grammar = await openAi.chat({
+    const { grammarCheck } = ctx.session.settings;
+    
+    const grammar = grammarCheck ? await openAi.chat({
       messages: [
         { role: openAi.roles.SYSTEM, content: "Correct my spelling and grammar." },
         { role: openAi.roles.USER, content: ctx.message.text }]
-    }.messages)
-    grammar.content !== ctx.message.text ? await ctx.reply(`Correct: ${grammar.content}`) : null;
+    }.messages) : null;
+    grammarCheck && grammar.content !== ctx.message.text ? await ctx.reply(`Correct: ${grammar.content}`) : null;
 
     ctx.session.messages.push({role: openAi.roles.USER, content: ctx.message.text})
     const response = await openAi.chat(ctx.session.messages);

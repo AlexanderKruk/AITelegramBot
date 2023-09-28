@@ -82,7 +82,8 @@ bot.command('start', async (ctx) => {
 bot.command('new', async (ctx) => {
   try {
     ctx.session = { ...structuredClone(INITIAL_SESSION), settings: ctx?.session?.settings || settings }
-    chooseTopicMessage(ctx)
+    await chooseTopicMessage(ctx)
+    await setChatGptSettings(ctx)
   } catch (error) {
     console.log('new command error', error.message)
   }

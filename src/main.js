@@ -142,6 +142,7 @@ bot.action("languageLevelAdvanced", async (ctx) => {
 
 bot.on(message('voice'), async (ctx) => {
   try {
+    const { grammarCheck } = ctx.session.settings;
     ctx.session ??= structuredClone(INITIAL_SESSION);
     const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id)
     const userId = ctx.message.from.id;
@@ -149,13 +150,13 @@ bot.on(message('voice'), async (ctx) => {
     const mp3Path = await ogg.toMp3(oggPath, userId);
 
     const text = await openAi.transcription(mp3Path);
-    const grammar = await openAi.chat({
+    const grammar = grammarCheck ? await openAi.chat({
       messages: [
         { role: openAi.roles.SYSTEM, content: "Correct my spelling and grammar." },
         { role: openAi.roles.USER, content: text }]
-    }.messages)
-    grammar.content !== text ? await ctx.reply(`Your message: ${text}\nCorrect: ${grammar.content}`) : await ctx.reply(`Your message: ${text}`);
-    ctx.session.messages.push({ role: openAi.roles.USER, content: grammar.content })
+    }.messages) : null;
+    grammarCheck && grammar.content !== text ? await ctx.reply(`Your message: ${text}\nCorrect: ${grammar.content}`) : await ctx.reply(`Your message: ${text}`);
+    ctx.session.messages.push({ role: openAi.roles.USER, content: text })
     const response = await openAi.chat(ctx.session.messages);
     ctx.session.messages.push({ role: openAi.roles.ASSISTANT, content: response.content })
     const source = await textConverter.textToSpeech(`${response.content}`, ctx.session.settings.practiceLanguage)

@@ -33,9 +33,32 @@ class TextConverter {
     return response.data.access_token
   }
 
-  async textToSpeech(text) {
+  async textToSpeech(text, language) {
     try {
       const url = "https://us-central1-texttospeech.googleapis.com/v1beta1/text:synthesize";
+
+      const calculateVoice = (language) => {
+        switch (language) {
+          case 'German': {
+            return {
+              "languageCode": "de-DE",
+              "name": "de-DE-Neural2-D"
+            }
+          }
+          case 'English': {
+            return {
+              "languageCode": "en-GB",
+              "name": "en-GB-Neural2-C"
+            }
+          }
+          default: {
+          return {
+            "languageCode": "en-GB",
+            "name": "en-GB-Neural2-C"
+            }
+          }
+        }
+    }
 
     const data = {
       "audioConfig": {
@@ -47,12 +70,9 @@ class TextConverter {
         "speakingRate": 1
       },
       "input": { text },
-      "voice": {
-        "languageCode": "en-GB",
-        "name": "en-GB-Neural2-C"
-      }
+      "voice": calculateVoice(language)
     }
-
+      
     const accessToken = await this.getToken()
       
     const response = await axios({

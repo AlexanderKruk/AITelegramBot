@@ -161,7 +161,6 @@ bot.on(message('voice'), async (ctx) => {
     const response = await openAi.chat(ctx.session.messages);
     ctx.session.messages.push({ role: openAi.roles.ASSISTANT, content: response.content })
     const source = await textConverter.textToSpeech(`${response.content}`, ctx.session.settings.practiceLanguage)
-    ctx.sendChatAction('record_voice');
     await ctx.replyWithVoice({ source }, { caption: ctx.session.settings.hideQuestion ? spoiler(response.content) : response.content})
   } catch (error) {
     console.log('get voice error', error.message) 

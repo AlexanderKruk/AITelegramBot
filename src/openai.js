@@ -27,9 +27,9 @@ class OpenAI {
     }
   }
 
-  async transcription(filepath) {
+  async transcription(filepath, language) {
     try {
-      const response = await this.openai.createTranscription(createReadStream(filepath), 'whisper-1');
+      const response = await this.openai.createTranscription(createReadStream(filepath), 'whisper-1', undefined, undefined, undefined, language === "English" ? "en" : "de");
       return response.data.text
     } catch (error) {
       console.log('transcription error', error.message)

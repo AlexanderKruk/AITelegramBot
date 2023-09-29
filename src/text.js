@@ -3,7 +3,6 @@ import { resolve } from 'path';
 import { readFileSync } from 'fs'
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
-import { writeFile } from 'fs/promises';
 
 class TextConverter {
   async getToken() {
@@ -62,7 +61,7 @@ class TextConverter {
 
     const data = {
       "audioConfig": {
-        "audioEncoding": "MP3",
+        "audioEncoding": "OGG_OPUS",
         "effectsProfileId": [
           "handset-class-device"
         ],

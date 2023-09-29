@@ -63,7 +63,7 @@ bot.telegram.setMyCommands([
   { command: '/start', description: 'Choose language and level' },
   { command: '/new', description: 'Start new dialog' },
   { command: '/spoilers', description: 'Hide or show text answers' },
-  { command: '/check', description: 'Grammar check'},
+  // { command: '/check', description: 'Grammar check'},
 ])
 
 bot.command('start', async (ctx) => {
@@ -142,6 +142,7 @@ bot.action("languageLevelAdvanced", async (ctx) => {
 
 bot.on(message('voice'), async (ctx) => {
   try {
+    ctx.sendChatAction('record_voice');
     const { grammarCheck } = ctx.session.settings;
     ctx.session ??= structuredClone(INITIAL_SESSION);
     const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id)
@@ -149,20 +150,19 @@ bot.on(message('voice'), async (ctx) => {
     const oggPath = await ogg.create(link.href, userId);
     const mp3Path = await ogg.toMp3(oggPath, userId);
 
-    const text = await openAi.transcription(mp3Path);
-    const grammar = grammarCheck ? await openAi.chat({
-      messages: [
-        { role: openAi.roles.SYSTEM, content: "Correct my spelling and grammar." },
-        { role: openAi.roles.USER, content: text }]
-    }.messages) : null;
-    grammarCheck && grammar.content !== text ? await ctx.reply(`Your message: ${text}\nCorrect: ${grammar.content}`) : await ctx.reply(`Your message: ${text}`);
+    const text = await openAi.transcription(mp3Path, ctx.session.settings.practiceLanguage);
+    // const grammar = grammarCheck ? await openAi.chat({
+    //   messages: [
+    //     { role: openAi.roles.SYSTEM, content: "Correct my spelling and grammar." },
+    //     { role: openAi.roles.USER, content: text }]
+    // }.messages) : null;
+    // grammarCheck && grammar.content !== text ? await ctx.reply(`Your message: ${text}\nCorrect: ${grammar.content}`) : await ctx.reply(`Your message: ${text}`);
     ctx.session.messages.push({ role: openAi.roles.USER, content: text })
     const response = await openAi.chat(ctx.session.messages);
     ctx.session.messages.push({ role: openAi.roles.ASSISTANT, content: response.content })
     const source = await textConverter.textToSpeech(`${response.content}`, ctx.session.settings.practiceLanguage)
-    // await ctx.sendAudio({ source })
-    await ctx.replyWithVoice({ source })
-    ctx.session.settings.hideQuestion ? await ctx.reply(spoiler(response.content))  : await ctx.reply(response.content);
+    ctx.sendChatAction('record_voice');
+    await ctx.replyWithVoice({ source }, { caption: ctx.session.settings.hideQuestion ? spoiler(response.content) : response.content})
   } catch (error) {
     console.log('get voice error', error.message) 
   }
@@ -170,24 +170,23 @@ bot.on(message('voice'), async (ctx) => {
 
 bot.on(message('text'), async (ctx) => {
   try {
+    ctx.sendChatAction('record_voice');
     ctx.session ??= structuredClone(INITIAL_SESSION);
     const { grammarCheck } = ctx.session.settings;
     
-    const grammar = grammarCheck ? await openAi.chat({
-      messages: [
-        { role: openAi.roles.SYSTEM, content: "I am studying English. Correct my mistakes if they exist in separate text block that start with Correct:. 2. Suggest one alternative of this sentences in text block start with Alternative:." },
-        { role: openAi.roles.USER, content: ctx.message.text }]
-    }.messages) : null;
-    grammarCheck && grammar.content !== ctx.message.text ? await ctx.reply(`${grammar.content}`) : null;
+    // const grammar = grammarCheck ? await openAi.chat({
+    //   messages: [
+    //     { role: openAi.roles.SYSTEM, content: "I am studying English. Correct my mistakes if they exist in separate text block that start with Correct:. 2. Suggest one alternative of this sentences in text block start with Alternative:." },
+    //     { role: openAi.roles.USER, content: ctx.message.text }]
+    // }.messages) : null;
+    // grammarCheck && grammar.content !== ctx.message.text ? await ctx.reply(`${grammar.content}`) : null;
 
     ctx.session.messages.push({role: openAi.roles.USER, content: ctx.message.text})
     const response = await openAi.chat(ctx.session.messages);
     ctx.session.messages.push({ role: openAi.roles.ASSISTANT, content: response.content })
     
     const source = await textConverter.textToSpeech(response.content, ctx.session.settings.practiceLanguage)
-    await ctx.replyWithVoice({ source })
-
-    ctx.session.settings.hideQuestion ? await ctx.reply(spoiler(response.content))  : await ctx.reply(response.content);
+    await ctx.replyWithVoice({ source }, { caption: ctx.session.settings.hideQuestion ? spoiler(response.content) : response.content})
   } catch (error) {
     console.log('get text error', error.message) 
   }

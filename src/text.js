@@ -41,13 +41,13 @@ class TextConverter {
           case 'German': {
             return {
               "languageCode": "de-DE",
-              "name": "de-DE-Neural2-D"
+              "name": "de-DE-Polyglot-1"
             }
           }
           case 'English': {
             return {
-              "languageCode": "en-GB",
-              "name": "en-GB-Neural2-C"
+              "languageCode": "en-US",
+              "name": "en-US-Polyglot-1"
             }
           }
           default: {

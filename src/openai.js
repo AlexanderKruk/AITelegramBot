@@ -27,9 +27,22 @@ class OpenAI {
     }
   }
 
+  transcriptionLanguage = (language) => {
+    switch (language) {
+      case "English":
+        return "en"
+      case "German": 
+        return "de"
+      case "Polish":
+        return "pl"
+      default: 
+        return "en"
+    }
+  } 
+
   async transcription(filepath, language) {
     try {
-      const response = await this.openai.createTranscription(createReadStream(filepath), 'whisper-1', undefined, undefined, undefined, language === "English" ? "en" : "de");
+      const response = await this.openai.createTranscription(createReadStream(filepath), 'whisper-1', undefined, undefined, undefined, this.transcriptionLanguage(language));
       return response.data.text
     } catch (error) {
       console.log('transcription error', error.message)

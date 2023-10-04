@@ -35,7 +35,7 @@ class TextConverter {
   async textToSpeech(text, language) {
     try {
       const url = "https://us-central1-texttospeech.googleapis.com/v1beta1/text:synthesize";
-
+    
       const calculateVoice = (language) => {
         switch (language) {
           case 'German': {
@@ -50,14 +50,20 @@ class TextConverter {
               "name": "en-US-Polyglot-1"
             }
           }
+          case 'Polish': {
+            return {
+              "languageCode": "pl-PL",
+              "name": "pl-PL-Standard-E"
+            }
+          }
           default: {
           return {
-            "languageCode": "en-GB",
-            "name": "en-GB-Neural2-C"
+              "languageCode": "en-GB",
+              "name": "en-GB-Neural2-C"
             }
           }
         }
-    }
+      }
 
     const data = {
       "audioConfig": {

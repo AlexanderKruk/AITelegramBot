@@ -46,7 +46,7 @@ const setChatGptSettings = async (ctx) => {
       role: openAi.roles.SYSTEM, content: `Act as ${language} language teacher. Let's practice some dialogues. Answer in ${level} ${language} language, with maximum 3 sentences. Ask question at the end.`
     })
     ctx.session.topicMessages.push({
-      role: openAi.roles.SYSTEM, content: `Answer only in ${language} language. Suggest list of 3 topics for discuss at the ${level} level. Only titles. Maximum 44 characters each topic.`
+      role: openAi.roles.SYSTEM, content: `Answer only in ${language} language. Suggest numbered list of 3 topics for discuss at the ${level} level. Only titles. Maximum 44 characters each topic. No need to write amount of symbols`
     })
   } catch (error) {
     console.error('setChatGptSettings: ', error.message)
@@ -55,16 +55,14 @@ const setChatGptSettings = async (ctx) => {
 
 const getTopic = async (ctx) => {
   try {
-    console.log('ctx', ctx.session)
     const rawTopics = await openAi.chat(ctx.session.topicMessages);
-    console.log('rawTopics', rawTopics);
     ctx.session.topicMessages.push({ role: openAi.roles.ASSISTANT, content: rawTopics.content })
     ctx.session.settings.topics = rawTopics.content.split('\n').map(item => item.slice(3).replace(/['"]+/g, ''));
     await ctx.reply("Select a topic:", Markup.inlineKeyboard([
       [Markup.button.callback(ctx.session.settings.topics[0], "selectTopic0Handler")],
       [Markup.button.callback(ctx.session.settings.topics[1], "selectTopic1Handler")],
       [Markup.button.callback(ctx.session.settings.topics[2], "selectTopic2Handler")],
-      [Markup.button.callback("✏️ My own topic", "practiceLanguageGerman"), Markup.button.callback("🔄 Change topics", "changeTopics"),],
+      [Markup.button.callback("✏️ My own topic", "myOwnTopicHandler"), Markup.button.callback("🔄 Change topics", "changeTopics"),],
     ]))
   } catch (error) {
     console.error('getTopic: ', error.message)
@@ -115,8 +113,9 @@ bot.command('start', async (ctx) => {
     ctx.session = structuredClone(INITIAL_SESSION)
     await ctx.reply(`I will help you learn foreign languages.`)
     await ctx.reply("Select a language to learn", Markup.inlineKeyboard([
-      Markup.button.callback("English", "practiceLanguageEnglish"),
-      Markup.button.callback("German", "practiceLanguageGerman")
+      [Markup.button.callback("English", "practiceLanguageEnglish"),
+        Markup.button.callback("German", "practiceLanguageGerman")],
+      [Markup.button.callback("Polish", "practiceLanguagePolish")]
     ]))
   } catch (error) {
     console.error('start command: ', error.message)
@@ -160,7 +159,7 @@ bot.action("changeTopics", async (ctx) => {
     ctx.session.topicMessages.push({ role: openAi.roles.USER, content: `Update topics` })
     const rawTopics = await openAi.chat(ctx.session.topicMessages);
     ctx.session.topicMessages.push({ role: openAi.roles.ASSISTANT, content: rawTopics.content })
-    ctx.session.settings.topics = rawTopics.content.split('\n').map(item => item.slice(3).replace(/['"]+/g, ''));
+    ctx.session.settings.topics = rawTopics.content.split('\n').map(item => item.replace(/['"]+/g, ''));
     await ctx.editMessageText("Select a topic:", Markup.inlineKeyboard([
       [Markup.button.callback(ctx.session.settings.topics[0], "selectTopic0Handler")],
       [Markup.button.callback(ctx.session.settings.topics[1], "selectTopic1Handler")],
@@ -198,6 +197,14 @@ bot.action("selectTopic2Handler", async (ctx) => {
   }
 })
 
+bot.action("myOwnTopicHandler", async (ctx) => {
+  try {
+    await ctx.deleteMessage();
+  } catch (error) {
+    console.error('myOwnTopic: ', error.message); 
+  }
+})
+
 
 bot.action("practiceLanguageGerman", async (ctx) => {
   try {
@@ -216,6 +223,16 @@ bot.action("practiceLanguageEnglish", async (ctx) => {
     await selectLanguageLevel(ctx);
   } catch (error) {
     console.error('practiceLanguageEnglish: ', error.message);
+  }
+})
+
+bot.action("practiceLanguagePolish", async (ctx) => {
+  try {
+    ctx.session.settings.practiceLanguage = "Polish";
+    await ctx.editMessageText("Polish selected")
+    await selectLanguageLevel(ctx);
+  } catch (error) {
+    console.error('practiceLanguagePolish: ', error.message);
   }
 })
 

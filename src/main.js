@@ -1,5 +1,6 @@
 import { Markup, Telegraf } from 'telegraf';
 import LocalSession from 'telegraf-session-local'
+import RedisSession from 'telegraf-session-redis-upd'
 import config from 'config';
 import { message } from 'telegraf/filters'
 import { ogg } from './ogg.js';
@@ -10,7 +11,16 @@ import { diff } from './utils.js';
 
 const bot = new Telegraf(config.get('TELEGRAM_TOKEN'))
 
-bot.use((new LocalSession({ database: 'sessions.json' })).middleware())
+// bot.use((new LocalSession({ database: 'sessions.json' })).middleware())
+
+const session = new RedisSession({
+  store: {
+    host: process.env.TELEGRAM_SESSION_HOST || '127.0.0.1',
+    port: process.env.TELEGRAM_SESSION_PORT || 6379
+  }
+})
+
+bot.use(session)
 
 const settings = {
   hideQuestion: false,

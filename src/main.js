@@ -1,5 +1,4 @@
 import { Markup, Telegraf } from 'telegraf';
-import LocalSession from 'telegraf-session-local'
 import RedisSession from 'telegraf-session-redis-upd'
 import config from 'config';
 import { message } from 'telegraf/filters'
@@ -10,8 +9,6 @@ import { spoiler } from 'telegraf/format'
 import { diff } from './utils.js';
 
 const bot = new Telegraf(config.get('TELEGRAM_TOKEN'))
-
-// bot.use((new LocalSession({ database: 'sessions.json' })).middleware())
 
 const session = new RedisSession({
   store: {

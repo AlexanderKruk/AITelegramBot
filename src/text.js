@@ -3,12 +3,16 @@ import { resolve } from 'path';
 import { readFileSync } from 'fs'
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
+import config from 'config';
 
 class TextConverter {
+
+  pathToKey = config.get('ENV') === 'prod' ? "../google-text-to-speech-prod.json" : "../google-text-to-speech-dev.json";
+
   async getToken() {
     const key = JSON.parse(
-      readFileSync(resolve(__dirname, "../aifriend-text-to-spech.json"), "utf-8")
-    )
+      readFileSync(resolve(__dirname, this.pathToKey), "utf-8")
+      )
 
     const token = jwt.sign(
       {

@@ -14,7 +14,7 @@ const bot = new Telegraf(config.get('TELEGRAM_TOKEN'))
 const ga4 = new TelegrafGA4({
   measurement_id: config.get("GA_MEASUREMENT_ID"),
   api_secret: config.get("GA_API_SECRET"),
-  client_id: "116340455169171523809"
+  client_id: config.get("GA_API_CLIENT_ID")
 });
 
 const session = new RedisSession({
@@ -141,6 +141,11 @@ bot.command('start', async (ctx) => {
 
 bot.command('new', ga4.view('new dialog'), async (ctx) => {
   try {
+      const validationMessages = await ctx.ga4.event('login', {
+    method: 'Telegram'
+  }, true);
+  // events validation: https://developers.google.com/analytics/devguides/collection/protocol/ga4/validating-events
+  console.log('valid:', validationMessages); 
     ctx.session = {
       ...structuredClone(INITIAL_SESSION),
       settings: ctx?.session?.settings || settings,

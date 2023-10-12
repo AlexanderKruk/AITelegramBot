@@ -7,8 +7,15 @@ import { openAi } from './openai.js'
 import { textConverter } from './text.js';
 import { spoiler } from 'telegraf/format'
 import { diff } from './utils.js';
+import TelegrafGA4 from 'telegraf-ga4';
 
 const bot = new Telegraf(config.get('TELEGRAM_TOKEN'))
+
+const ga4 = new TelegrafGA4({
+  measurement_id: config.get("GA_MEASUREMENT_ID"),
+  api_secret: config.get("GA_API_SECRET"),
+  client_id: "116340455169171523809"
+});
 
 const session = new RedisSession({
   store: {
@@ -18,6 +25,7 @@ const session = new RedisSession({
 })
 
 bot.use(session)
+bot.use(ga4.middleware());
 
 const settings = {
   hideQuestion: false,
@@ -37,7 +45,7 @@ const INITIAL_SESSION = {
 const selectLanguageLevel = async (ctx) => {
   try {
     await ctx.reply("Select your language level", Markup.inlineKeyboard([
-      Markup.button.callback("Beginner", "languageLevelBasic"),
+      Markup.button.callback("Beginner", "languageLevelBeginner"),
       Markup.button.callback("Intermediate", "languageLevelIntermediate"),
       Markup.button.callback("Advanced", "languageLevelAdvanced")
     ]))
@@ -118,6 +126,7 @@ bot.telegram.setMyCommands([
 
 bot.command('start', async (ctx) => {
   try {
+    await ga4.view('start')
     ctx.session = structuredClone(INITIAL_SESSION)
     await ctx.reply(`I will help you learn foreign languages.`)
     await ctx.reply("Select a language to learn", Markup.inlineKeyboard([
@@ -130,7 +139,7 @@ bot.command('start', async (ctx) => {
   }
 })
 
-bot.command('new', async (ctx) => {
+bot.command('new', ga4.view('new dialog'), async (ctx) => {
   try {
     ctx.session = {
       ...structuredClone(INITIAL_SESSION),
@@ -144,7 +153,7 @@ bot.command('new', async (ctx) => {
   }
 })
 
-bot.command('spoilers', async (ctx) => {
+bot.command('spoilers', ga4.view('toggle spoilers'), async (ctx) => {
   try {
     ctx.session.settings.hideQuestion = !ctx.session.settings.hideQuestion;
     ctx.session.settings.hideQuestion ? await ctx.reply('Spoiler activated') : await ctx.reply('Spoiler disabled');
@@ -162,7 +171,7 @@ bot.command('check', async (ctx) => {
   }
 })
 
-bot.action("changeTopics", async (ctx) => {
+bot.action("changeTopics", ga4.view('topics change'), async (ctx) => {
   try {
     ctx.session.topicMessages.push({ role: openAi.roles.USER, content: `Update topics` })
     const rawTopics = await openAi.chat(ctx.session.topicMessages);
@@ -179,33 +188,33 @@ bot.action("changeTopics", async (ctx) => {
   }
 })
 
-bot.action("selectTopic0Handler", async (ctx) => {
+bot.action("selectTopic0Handler", ga4.view('topic selected'), async (ctx) => {
   try {
-    await selectTopic(ctx, 0) 
+    await selectTopic(ctx, 0);
   } catch (error) {
     console.error('selectTopic0Handler: ', error.message); 
   }
 })
 
 
-bot.action("selectTopic1Handler", async (ctx) => {
+bot.action("selectTopic1Handler", ga4.view('topic selected'), async (ctx) => {
   try {
-    await selectTopic(ctx, 1) 
+    await selectTopic(ctx, 1);
   } catch (error) {
     console.error('selectTopic1Handler: ', error.message); 
   }
 })
 
 
-bot.action("selectTopic2Handler", async (ctx) => {
+bot.action("selectTopic2Handler", ga4.view('topic selected'), async (ctx) => {
   try {
-    await selectTopic(ctx, 2) 
+    await selectTopic(ctx, 2);
   } catch (error) {
     console.error('selectTopic2Handler: ', error.message); 
   }
 })
 
-bot.action("myOwnTopicHandler", async (ctx) => {
+bot.action("myOwnTopicHandler", ga4.view('topic own'), async (ctx) => {
   try {
     await ctx.deleteMessage();
   } catch (error) {
@@ -214,7 +223,7 @@ bot.action("myOwnTopicHandler", async (ctx) => {
 })
 
 
-bot.action("practiceLanguageGerman", async (ctx) => {
+bot.action("practiceLanguageGerman", ga4.view('language german'), async (ctx) => {
   try {
     ctx.session.settings.practiceLanguage = "German";
     await ctx.editMessageText("German selected")
@@ -224,7 +233,7 @@ bot.action("practiceLanguageGerman", async (ctx) => {
   }
 })
 
-bot.action("practiceLanguageEnglish", async (ctx) => {
+bot.action("practiceLanguageEnglish", ga4.view('language english'), async (ctx) => {
   try {
     ctx.session.settings.practiceLanguage = "English";
     await ctx.editMessageText("English selected")
@@ -234,7 +243,7 @@ bot.action("practiceLanguageEnglish", async (ctx) => {
   }
 })
 
-bot.action("practiceLanguagePolish", async (ctx) => {
+bot.action("practiceLanguagePolish", ga4.view('language polish'), async (ctx) => {
   try {
     ctx.session.settings.practiceLanguage = "Polish";
     await ctx.editMessageText("Polish selected")
@@ -244,18 +253,18 @@ bot.action("practiceLanguagePolish", async (ctx) => {
   }
 })
 
-bot.action("languageLevelBasic", async (ctx) => {
+bot.action("languageLevelBeginner", ga4.view('level beginner'), async (ctx) => {
   try {
     ctx.session.settings.languageLevel = "basic";
     await setChatGptSettings(ctx);
     await ctx.editMessageText("Beginner level selected")
     await chooseTopicMessage(ctx);
   } catch (error) {
-    console.error('languageLevelBasic: ', error.message);
+    console.error('languageLevelBeginner: ', error.message);
   }
 })
 
-bot.action("languageLevelIntermediate", async (ctx) => {
+bot.action("languageLevelIntermediate", ga4.view('level intermediate'), async (ctx) => {
   try {
     ctx.session.settings.languageLevel = "intermediate";
     await setChatGptSettings(ctx);
@@ -266,7 +275,7 @@ bot.action("languageLevelIntermediate", async (ctx) => {
   }
 })
 
-bot.action("languageLevelAdvanced", async (ctx) => {
+bot.action("languageLevelAdvanced", ga4.view('level advanced'), async (ctx) => {
   try {
     ctx.session.settings.languageLevel = "advanced";
     await setChatGptSettings(ctx);
@@ -277,7 +286,7 @@ bot.action("languageLevelAdvanced", async (ctx) => {
   }
 })
 
-bot.on(message('voice'), async (ctx) => {
+bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
   try {
     ctx.sendChatAction('record_voice');
     const { grammarCheck } = ctx.session.settings;
@@ -305,7 +314,7 @@ bot.on(message('voice'), async (ctx) => {
   }
 })
 
-bot.on(message('text'), async (ctx) => {
+bot.on(message('text'), ga4.view('user text message'), async (ctx) => {
   try {
     ctx.sendChatAction('record_voice');
     ctx.session ??= structuredClone(INITIAL_SESSION);
@@ -320,10 +329,10 @@ bot.on(message('text'), async (ctx) => {
     grammarCheck && corrected !== ctx.message.text ? await ctx.replyWithHTML(`Correct: ${diffText}`) : null;
     ctx.session.messages.push({role: openAi.roles.USER, content: ctx.message.text})
     const response = await openAi.chat(ctx.session.messages);
-    ctx.session.messages.push({ role: openAi.roles.ASSISTANT, content: response.content })
-    
+    ctx.session.messages.push({ role: openAi.roles.ASSISTANT, content: response.content })   
     const source = await textConverter.textToSpeech(response.content, ctx.session.settings.practiceLanguage)
     await ctx.replyWithVoice({ source }, { caption: ctx.session.settings.hideQuestion ? spoiler(response.content) : response.content })
+
   } catch (error) {
     console.error('get text: ', error.message) 
   }

@@ -1,6 +1,6 @@
 {
-  "name": "telegramchatgptbot",
-  "version": "1.0.0",
+  "name": "aibot",
+  "version": "0.1",
   "description": "",
   "main": "index.js",
   "type": "module",
@@ -24,6 +24,7 @@
     "jsonwebtoken": "^9.0.2",
     "openai": "^3.2.1",
     "telegraf": "^4.13.1",
+    "telegraf-ga4": "https://github.com/rezox1/telegraf-ga4.git",
     "telegraf-session-redis-upd": "^5.1.4"
   }
 }

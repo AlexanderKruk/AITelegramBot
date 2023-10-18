@@ -112,7 +112,7 @@ const chooseTopicMessage = async (ctx) => {
 const initialization = async (ctx) => {
   try {
     ctx.session = structuredClone(INITIAL_SESSION)
-    await ctx.reply(`Hi, I am upSpeak.👋\nI will help you practice your English speaking skills.\nYou can send voice 🎙 or text 💬 messages.`)
+    await ctx.reply(`Hi, I am UpSpeak.👋\nI will help you practice your English speaking skills.\nYou can send voice 🎙 or text 💬 messages.`)
     await ctx.reply("What English you want to learn", Markup.inlineKeyboard([
       [Markup.button.callback("🇬🇧 British", "practiceBritishEnglish"),
         Markup.button.callback("🇺🇸 American", "practiceAmericanEnglish")],

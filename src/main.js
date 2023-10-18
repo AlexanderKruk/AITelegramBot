@@ -69,6 +69,14 @@ const setChatGptSettings = async (ctx) => {
   }
 }
 
+const cutLongTermMemory = (data = [], length, startFrom) => {
+  const dataLength = data.length;
+  if (dataLength > length - startFrom) {
+    return [...data.slice(0,startFrom), ...data.slice((length - startFrom) * -1)]
+  }
+  return data;
+}
+
 const getTopic = async (ctx) => {
   try {
     const rawTopics = await openAi.chat(ctx.session.topicMessages);
@@ -103,6 +111,20 @@ const chooseTopicMessage = async (ctx) => {
   }
 }
 
+const initialization = async (ctx) => {
+  try {
+    ctx.session = structuredClone(INITIAL_SESSION)
+    await ctx.reply(`I will help you learn foreign languages.`)
+    await ctx.reply("Select a language to learn", Markup.inlineKeyboard([
+      [Markup.button.callback("English", "practiceLanguageEnglish"),
+        Markup.button.callback("German", "practiceLanguageGerman")],
+      [Markup.button.callback("Polish", "practiceLanguagePolish")]
+    ]))
+  } catch (error) {
+    console.error('initialization error: ', error.message)
+  }
+}
+
 const selectTopic = async (ctx, index) => {
   try {
     ctx.session.settings.selectedTopic = ctx.session.settings.topics[index]
@@ -120,32 +142,49 @@ const selectTopic = async (ctx, index) => {
 bot.telegram.setMyCommands([
   { command: '/start', description: 'Choose language and level' },
   { command: '/new', description: 'Start new dialog' },
-  { command: '/spoilers', description: 'Hide or show text answers' },
+  // { command: '/spoilers', description: 'Hide or show text answers' },
+  // { command: '/buy', description: 'Test buy' },
   // { command: '/check', description: 'Grammar check'},
 ])
 
-bot.command('start', async (ctx) => {
+bot.command('start', ga4.view('start'), async (ctx) => {
+  await initialization(ctx)
+})
+
+const getInvoice = (id) => {
+  const invoice = {
+    chat_id: id, // Unique identifier of the target chat or username of the target channel
+    provider_token: config.get('STRIPE_PAYMENTS_TOKEN'), // token issued via bot @SberbankPaymentBot
+    start_parameter: 'get_access', // Unique parameter for deep links. If you leave this field blank, forwarded copies of the forwarded message will have a Pay button that allows multiple users to pay directly from the forwarded message using the same account. If not empty, redirected copies of the sent message will have a URL button with a deep link to the bot (instead of a payment button) with a value used as an initial parameter.
+    title: 'InvoiceTitle', // Product name, 1-32 characters
+    description: 'InvoiceDescription', // Product description, 1-255 characters
+    currency: 'PLN', // ISO 4217 Three-Letter Currency Code
+    prices: [{ label: 'Invoice Title', amount: 5 * 100 }], // Price breakdown, serialized list of components in JSON format 100 kopecks * 100 = 100 rubles
+    payload: "payload"
+  }
+
+  return invoice
+}
+
+bot.on('pre_checkout_query', (ctx) => ctx.answerPreCheckoutQuery(true)) // response to a preliminary request for payment
+
+bot.on('successful_payment', async (ctx, next) => { // reply in case of positive payment
+  await ctx.reply('SuccessfulPayment')
+})
+
+
+bot.command('buy', async (ctx) => {
   try {
-    await ga4.view('start')
-    ctx.session = structuredClone(INITIAL_SESSION)
-    await ctx.reply(`I will help you learn foreign languages.`)
-    await ctx.reply("Select a language to learn", Markup.inlineKeyboard([
-      [Markup.button.callback("English", "practiceLanguageEnglish"),
-        Markup.button.callback("German", "practiceLanguageGerman")],
-      [Markup.button.callback("Polish", "practiceLanguagePolish")]
-    ]))
+    await ctx.replyWithHTML("Cards for test pay <a href='https://stripe.com/docs/testing#cards'>here</a>",
+      { disable_web_page_preview: true });
+    await ctx.replyWithInvoice(getInvoice(ctx.from.id))
   } catch (error) {
-    console.error('start command: ', error.message)
+    console.error('buy command: ', error.message)
   }
 })
 
 bot.command('new', ga4.view('new dialog'), async (ctx) => {
   try {
-      const validationMessages = await ctx.ga4.event('login', {
-    method: 'Telegram'
-  }, true);
-  // events validation: https://developers.google.com/analytics/devguides/collection/protocol/ga4/validating-events
-  console.log('valid:', validationMessages); 
     ctx.session = {
       ...structuredClone(INITIAL_SESSION),
       settings: ctx?.session?.settings || settings,
@@ -178,6 +217,7 @@ bot.command('check', async (ctx) => {
 
 bot.action("changeTopics", ga4.view('topics change'), async (ctx) => {
   try {
+    ctx.session.topicMessages = cutLongTermMemory(ctx.session.topicMessages, 11, 1);
     ctx.session.topicMessages.push({ role: openAi.roles.USER, content: `Update topics` })
     const rawTopics = await openAi.chat(ctx.session.topicMessages);
     ctx.session.topicMessages.push({ role: openAi.roles.ASSISTANT, content: rawTopics.content })
@@ -293,9 +333,11 @@ bot.action("languageLevelAdvanced", ga4.view('level advanced'), async (ctx) => {
 
 bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
   try {
+    if (!ctx.session.settings) {
+      return initialization(ctx);
+    }
     ctx.sendChatAction('record_voice');
     const { grammarCheck } = ctx.session.settings;
-    ctx.session ??= structuredClone(INITIAL_SESSION);
     const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id)
     const userId = ctx.message.from.id;
     const oggPath = await ogg.create(link.href, userId);
@@ -309,6 +351,7 @@ bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
     const corrected = grammar.content.match(/.*"([^"]+)"/)[0].slice(1, -1);
     const diffText = await diff(text, corrected)
     grammarCheck && corrected !== text ? await ctx.replyWithHTML(`Correct: ${diffText}`) : null;
+    ctx.session.messages = cutLongTermMemory(ctx.session.messages, 11, 2);
     ctx.session.messages.push({ role: openAi.roles.USER, content: text })
     const response = await openAi.chat(ctx.session.messages);
     ctx.session.messages.push({ role: openAi.roles.ASSISTANT, content: response.content })
@@ -321,10 +364,11 @@ bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
 
 bot.on(message('text'), ga4.view('user text message'), async (ctx) => {
   try {
+    if (!ctx.session.settings) {
+      return initialization(ctx);
+    }
     ctx.sendChatAction('record_voice');
-    ctx.session ??= structuredClone(INITIAL_SESSION);
     const { grammarCheck } = ctx.session.settings;
-    
     const grammar = grammarCheck ? await openAi.chat({
       messages: [
         { role: openAi.roles.SYSTEM, content: `It is ${ctx.session.settings.practiceLanguage}. Correct my spelling and grammar. Return text in quotes. Text: "${ctx.message.text}"` }]
@@ -332,9 +376,10 @@ bot.on(message('text'), ga4.view('user text message'), async (ctx) => {
     const corrected = grammar.content.match(/.*"([^"]+)"/)[0].slice(1, -1);
     const diffText = await diff(ctx.message.text, corrected)
     grammarCheck && corrected !== ctx.message.text ? await ctx.replyWithHTML(`Correct: ${diffText}`) : null;
-    ctx.session.messages.push({role: openAi.roles.USER, content: ctx.message.text})
+    ctx.session.messages = cutLongTermMemory(ctx.session.messages, 11, 2);
+    ctx.session.messages.push({ role: openAi.roles.USER, content: ctx.message.text })
     const response = await openAi.chat(ctx.session.messages);
-    ctx.session.messages.push({ role: openAi.roles.ASSISTANT, content: response.content })   
+    ctx.session.messages.push({ role: openAi.roles.ASSISTANT, content: response.content })
     const source = await textConverter.textToSpeech(response.content, ctx.session.settings.practiceLanguage)
     await ctx.replyWithVoice({ source }, { caption: ctx.session.settings.hideQuestion ? spoiler(response.content) : response.content })
 

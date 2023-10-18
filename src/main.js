@@ -82,7 +82,7 @@ const getTopic = async (ctx) => {
     const rawTopics = await openAi.chat(ctx.session.topicMessages);
     ctx.session.topicMessages.push({ role: openAi.roles.ASSISTANT, content: rawTopics.content })
     ctx.session.settings.topics = rawTopics.content.split('\n').map(item => item.slice(3).replace(/['"]+/g, ''));
-    await ctx.reply("Select a topic:", Markup.inlineKeyboard([
+    await ctx.reply("What do you want to talk about? Select a topic:", Markup.inlineKeyboard([
       [Markup.button.callback(ctx.session.settings.topics[0], "selectTopic0Handler")],
       [Markup.button.callback(ctx.session.settings.topics[1], "selectTopic1Handler")],
       [Markup.button.callback(ctx.session.settings.topics[2], "selectTopic2Handler")],
@@ -90,22 +90,6 @@ const getTopic = async (ctx) => {
     ]))
   } catch (error) {
     console.error('getTopic: ', error.message)
-  }
-}
-
-const chooseTopicMessage = async (ctx) => {
-  try {
-    switch (ctx.session.settings.practiceLanguage) {
-      case 'americanEnglish':
-      case 'britishEnglish':
-        await ctx.reply("What do you want to talk about?")
-        break;
-      default:
-        await ctx.reply("What do you want to talk about?")
-    }
-    await getTopic(ctx)
-  } catch (error) {
-    console.error('chooseTopicMessage: ', error.message) 
   }
 }
 
@@ -126,7 +110,7 @@ const initialization = async (ctx) => {
 const selectTopic = async (ctx, index) => {
   try {
     ctx.session.settings.selectedTopic = ctx.session.settings.topics[index]
-    ctx.editMessageText('Topic: ' + ctx.session.settings.selectedTopic)
+    ctx.editMessageText('🎯 ' + ctx.session.settings.selectedTopic)
     ctx.session.messages.push({ role: openAi.roles.USER, content: `Let's discuss: ${ctx.session.settings.selectedTopic}` })
     const response = await openAi.chat(ctx.session.messages);
     ctx.session.messages.push({ role: openAi.roles.ASSISTANT, content: response.content })
@@ -189,7 +173,7 @@ bot.command('new', ga4.view('new dialog'), async (ctx) => {
       topicMessages: ctx?.session?.topicMessages || []
     }
     await setChatGptSettings(ctx)
-    await chooseTopicMessage(ctx)
+    await getTopic(ctx)
   } catch (error) {
     console.error('new command: ', error.message)
   }
@@ -220,7 +204,7 @@ bot.action("changeTopics", ga4.view('topics change'), async (ctx) => {
     const rawTopics = await openAi.chat(ctx.session.topicMessages);
     ctx.session.topicMessages.push({ role: openAi.roles.ASSISTANT, content: rawTopics.content })
     ctx.session.settings.topics = rawTopics.content.split('\n').map(item => item.replace(/['"]+/g, ''));
-    await ctx.editMessageText("Select a topic:", Markup.inlineKeyboard([
+    await ctx.editMessageText("What do you want to talk about? Select a topic:", Markup.inlineKeyboard([
       [Markup.button.callback(ctx.session.settings.topics[0], "selectTopic0Handler")],
       [Markup.button.callback(ctx.session.settings.topics[1], "selectTopic1Handler")],
       [Markup.button.callback(ctx.session.settings.topics[2], "selectTopic2Handler")],
@@ -259,7 +243,7 @@ bot.action("selectTopic2Handler", ga4.view('topic selected'), async (ctx) => {
 
 bot.action("myOwnTopicHandler", ga4.view('topic own'), async (ctx) => {
   try {
-    await ctx.deleteMessage();
+    await ctx.editMessageText("What do you want to talk about?");
   } catch (error) {
     console.error('myOwnTopic: ', error.message); 
   }
@@ -301,7 +285,7 @@ bot.action("languageLevelBeginner", ga4.view('level beginner'), async (ctx) => {
     ctx.session.settings.languageLevel = "basic";
     await setChatGptSettings(ctx);
     await ctx.editMessageText("🙋 Basic level selected")
-    await chooseTopicMessage(ctx);
+    await getTopic(ctx);
   } catch (error) {
     console.error('languageLevelBeginner: ', error.message);
   }
@@ -312,7 +296,7 @@ bot.action("languageLevelIntermediate", ga4.view('level intermediate'), async (c
     ctx.session.settings.languageLevel = "intermediate";
     await setChatGptSettings(ctx);
     await ctx.editMessageText("🧑‍🏫️ Intermediate level selected");
-    await chooseTopicMessage(ctx);
+    await getTopic(ctx);
   } catch (error) {
     console.error('languageLevelIntermediate: ', error.message);
   }
@@ -323,7 +307,7 @@ bot.action("languageLevelAdvanced", ga4.view('level advanced'), async (ctx) => {
     ctx.session.settings.languageLevel = "advanced";
     await setChatGptSettings(ctx);
     await ctx.editMessageText("🧑‍🎓️ Advanced level selected");
-    await chooseTopicMessage(ctx);
+    await getTopic(ctx);
   } catch (error) {
     console.error('languageLevelAdvanced: ', error.message);
   }

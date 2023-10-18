@@ -45,9 +45,9 @@ const INITIAL_SESSION = {
 const selectLanguageLevel = async (ctx) => {
   try {
     await ctx.reply("Select your language level", Markup.inlineKeyboard([
-      Markup.button.callback("Beginner", "languageLevelBeginner"),
-      Markup.button.callback("Intermediate", "languageLevelIntermediate"),
-      Markup.button.callback("Advanced", "languageLevelAdvanced")
+      [Markup.button.callback("🙋 Basic", "languageLevelBeginner")],
+      [Markup.button.callback("🧑‍🏫️ Intermediate", "languageLevelIntermediate")],
+      [Markup.button.callback("🧑‍🎓️ Advanced", "languageLevelAdvanced")]
     ]))
   } catch (error) {
     console.error('selectLanguageLevel: ', error.message) 
@@ -86,7 +86,7 @@ const getTopic = async (ctx) => {
       [Markup.button.callback(ctx.session.settings.topics[0], "selectTopic0Handler")],
       [Markup.button.callback(ctx.session.settings.topics[1], "selectTopic1Handler")],
       [Markup.button.callback(ctx.session.settings.topics[2], "selectTopic2Handler")],
-      [Markup.button.callback("✏️ My own topic", "myOwnTopicHandler"), Markup.button.callback("🔄 Change topics", "changeTopics"),],
+      [Markup.button.callback("✏️ Let's talk about...", "myOwnTopicHandler"), Markup.button.callback("🔄 Change topics", "changeTopics"),],
     ]))
   } catch (error) {
     console.error('getTopic: ', error.message)
@@ -96,14 +96,12 @@ const getTopic = async (ctx) => {
 const chooseTopicMessage = async (ctx) => {
   try {
     switch (ctx.session.settings.practiceLanguage) {
-      case 'English':
-        await ctx.reply("What do you want to discuss?")
-        break;
-      case 'German':
-        await ctx.reply("Was möchten Sie besprechen?")
+      case 'americanEnglish':
+      case 'britishEnglish':
+        await ctx.reply("What do you want to talk about?")
         break;
       default:
-        await ctx.reply("What do you want to discuss?")
+        await ctx.reply("What do you want to talk about?")
     }
     await getTopic(ctx)
   } catch (error) {
@@ -114,11 +112,11 @@ const chooseTopicMessage = async (ctx) => {
 const initialization = async (ctx) => {
   try {
     ctx.session = structuredClone(INITIAL_SESSION)
-    await ctx.reply(`I will help you learn foreign languages.`)
-    await ctx.reply("Select a language to learn", Markup.inlineKeyboard([
-      [Markup.button.callback("English", "practiceLanguageEnglish"),
-        Markup.button.callback("German", "practiceLanguageGerman")],
-      [Markup.button.callback("Polish", "practiceLanguagePolish")]
+    await ctx.reply(`Hi, I am upSpeak.👋\nI will help you practice your English speaking skills.\nYou can send voice 🎙 or text 💬 messages.`)
+    await ctx.reply("What English you want to learn", Markup.inlineKeyboard([
+      [Markup.button.callback("🇬🇧 British", "practiceBritishEnglish"),
+        Markup.button.callback("🇺🇸 American", "practiceAmericanEnglish")],
+      // [Markup.button.callback("Polish", "practiceLanguagePolish")]
     ]))
   } catch (error) {
     console.error('initialization error: ', error.message)
@@ -268,23 +266,23 @@ bot.action("myOwnTopicHandler", ga4.view('topic own'), async (ctx) => {
 })
 
 
-bot.action("practiceLanguageGerman", ga4.view('language german'), async (ctx) => {
+bot.action("practiceAmericanEnglish", ga4.view('american english'), async (ctx) => {
   try {
-    ctx.session.settings.practiceLanguage = "German";
-    await ctx.editMessageText("German selected")
+    ctx.session.settings.practiceLanguage = "americanEnglish";
+    await ctx.editMessageText("🇺🇸 American selected")
     await selectLanguageLevel(ctx);
   } catch (error) {
-    console.error('practiceLanguageGerman: ', error.message);
+    console.error('practiceAmericanEnglish: ', error.message);
   }
 })
 
-bot.action("practiceLanguageEnglish", ga4.view('language english'), async (ctx) => {
+bot.action("practiceBritishEnglish", ga4.view('britishEnglish'), async (ctx) => {
   try {
-    ctx.session.settings.practiceLanguage = "English";
-    await ctx.editMessageText("English selected")
+    ctx.session.settings.practiceLanguage = "britishEnglish";
+    await ctx.editMessageText("🇬🇧 British English selected")
     await selectLanguageLevel(ctx);
   } catch (error) {
-    console.error('practiceLanguageEnglish: ', error.message);
+    console.error('practiceBritishEnglish: ', error.message);
   }
 })
 
@@ -302,7 +300,7 @@ bot.action("languageLevelBeginner", ga4.view('level beginner'), async (ctx) => {
   try {
     ctx.session.settings.languageLevel = "basic";
     await setChatGptSettings(ctx);
-    await ctx.editMessageText("Beginner level selected")
+    await ctx.editMessageText("🙋 Basic level selected")
     await chooseTopicMessage(ctx);
   } catch (error) {
     console.error('languageLevelBeginner: ', error.message);
@@ -313,7 +311,7 @@ bot.action("languageLevelIntermediate", ga4.view('level intermediate'), async (c
   try {
     ctx.session.settings.languageLevel = "intermediate";
     await setChatGptSettings(ctx);
-    await ctx.editMessageText("Intermediate level selected");
+    await ctx.editMessageText("🧑‍🏫️ Intermediate level selected");
     await chooseTopicMessage(ctx);
   } catch (error) {
     console.error('languageLevelIntermediate: ', error.message);
@@ -324,7 +322,7 @@ bot.action("languageLevelAdvanced", ga4.view('level advanced'), async (ctx) => {
   try {
     ctx.session.settings.languageLevel = "advanced";
     await setChatGptSettings(ctx);
-    await ctx.editMessageText("Advanced level selected");
+    await ctx.editMessageText("🧑‍🎓️ Advanced level selected");
     await chooseTopicMessage(ctx);
   } catch (error) {
     console.error('languageLevelAdvanced: ', error.message);

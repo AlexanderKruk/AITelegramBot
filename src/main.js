@@ -138,8 +138,8 @@ const selectTopic = async (ctx, index) => {
 }
 
 bot.telegram.setMyCommands([
-  { command: '/start', description: 'Choose language and level' },
-  { command: '/new', description: 'Start new dialog' },
+  { command: '/start', description: 'Choose English variant and level' },
+  { command: '/new', description: 'Change topic' },
   // { command: '/spoilers', description: 'Hide or show text answers' },
   // { command: '/buy', description: 'Test buy' },
   // { command: '/check', description: 'Grammar check'},
@@ -373,7 +373,7 @@ bot.on(message('text'), ga4.view('user text message'), async (ctx) => {
     }.messages) : null;
     const corrected = grammar.content.match(/.*"([^"]+)"/)[0].slice(1, -1);
     const diffText = await diff(ctx.message.text, corrected)
-    grammarCheck && corrected !== ctx.message.text ? await ctx.replyWithHTML(`Correct: ${diffText}`) : null;
+    grammarCheck && corrected.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"") !== ctx.message.text.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"") ? await ctx.replyWithHTML(`Correct: ${diffText}`) : null;
     ctx.session.messages = cutLongTermMemory(ctx.session.messages, 11, 2);
     ctx.session.messages.push({ role: openAi.roles.USER, content: ctx.message.text })
     const response = await openAi.chat(ctx.session.messages);

@@ -96,8 +96,8 @@ const getTopic = async (ctx) => {
 const initialization = async (ctx) => {
   try {
     ctx.session = structuredClone(INITIAL_SESSION)
-    await ctx.reply(`Hi, I am UpSpeak.👋\nI will help you practice your English speaking skills.\nYou can send voice 🎙 or text 💬 messages.`)
-    await ctx.reply("What English you want to learn", Markup.inlineKeyboard([
+    await ctx.reply(`Hi 👋, nice to meet you. \nI will help you practise your English conversation skills.\nYou can send voice 🎙 or text 💬 messages.`)
+    await ctx.reply("What English do you want to practise?", Markup.inlineKeyboard([
       [Markup.button.callback("🇬🇧 British", "practiceBritishEnglish"),
         Markup.button.callback("🇺🇸 American", "practiceAmericanEnglish")],
       // [Markup.button.callback("Polish", "practiceLanguagePolish")]
@@ -123,7 +123,7 @@ const selectTopic = async (ctx, index) => {
 
 bot.telegram.setMyCommands([
   { command: '/start', description: 'Choose English variant and level' },
-  { command: '/new', description: 'Change topic' },
+  { command: '/topic', description: 'Change topic' },
   // { command: '/spoilers', description: 'Hide or show text answers' },
   // { command: '/buy', description: 'Test buy' },
   // { command: '/check', description: 'Grammar check'},
@@ -165,7 +165,7 @@ bot.command('buy', async (ctx) => {
   }
 })
 
-bot.command('new', ga4.view('new dialog'), async (ctx) => {
+bot.command('topic', ga4.view('new dialog'), async (ctx) => {
   try {
     ctx.session = {
       ...structuredClone(INITIAL_SESSION),

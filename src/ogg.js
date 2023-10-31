@@ -21,7 +21,7 @@ class OggConverter {
           .inputOption('-t 30')
           .output(outputPath)
           .on('end', () => {
-            removeFile(input)
+            // removeFile(input)
             resolve(outputPath)
           })
           .on('error', (error) => reject(error.message))
@@ -29,6 +29,25 @@ class OggConverter {
       })
     } catch(error) {
       console.log('toMp3 error', error.message);
+    }
+  }
+
+  async toWav(input, output) {
+    try {
+      const outputPath = resolve(__dirname,'../voices', `${output}.wav`);
+      return new Promise((resolve, reject) => {
+        ffmpeg(input)
+          .toFormat('wav')
+          .output(outputPath)
+          .on('end', () => {
+            // removeFile(input)
+            resolve(outputPath)
+          })
+          .on('error', (error) => reject(error.message))
+          .run()
+      })
+    } catch(error) {
+      console.log('toWav error', error.message);
     }
   }
 

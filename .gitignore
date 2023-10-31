@@ -3,7 +3,7 @@
 node_modules
 config/default.json
 config/production.json
-voices/*.mp3
+voices
 google-text-to-speech-dev.json
 google-text-to-speech-prod.json
 sessions.json

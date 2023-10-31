@@ -3,6 +3,7 @@ import RedisSession from 'telegraf-session-redis-upd'
 import config from 'config';
 import { message } from 'telegraf/filters'
 import { ogg } from './ogg.js';
+import { pronounce } from './pronounce.js';
 import { openAi } from './openai.js'
 import { textConverter } from './text.js';
 import { spoiler } from 'telegraf/format'
@@ -39,7 +40,8 @@ const settings = {
 const INITIAL_SESSION = {
   messages: [],
   topicMessages: [],
-  settings
+  settings,
+  lastCheckMessage: {},
 }
 
 const selectLanguageLevel = async (ctx) => {
@@ -59,7 +61,7 @@ const setChatGptSettings = async (ctx) => {
     const level = ctx.session.settings.languageLevel || settings.languageLevel
     const language = ctx.session.settings.practiceLanguage || settings.practiceLanguage
     ctx.session.messages.push({
-      role: openAi.roles.SYSTEM, content: `Act as ${language} language teacher. Let's practice some dialogues. Answer in ${level} ${language} language, with maximum 3 sentences. Ask question at the end.`
+      role: openAi.roles.SYSTEM, content: `Act as ${language} language teacher. Let's practice some dialogues. Answer in ${level} ${language} language, with maximum 2 sentences. Ask question at the end.`
     })
     ctx.session.topicMessages.push({
       role: openAi.roles.SYSTEM, content: `Answer only in ${language} language. Suggest numbered list of 3 topics for discuss at the ${level} level. Only titles. Maximum 44 characters each topic. No need to write amount of symbols`
@@ -96,8 +98,8 @@ const getTopic = async (ctx) => {
 const initialization = async (ctx) => {
   try {
     ctx.session = structuredClone(INITIAL_SESSION)
-    await ctx.reply(`Hi 👋, nice to meet you. \nI will help you practise your English conversation skills.\nYou can send voice 🎙 or text 💬 messages.`)
-    await ctx.reply("What English do you want to practise?", Markup.inlineKeyboard([
+    await ctx.reply(`Hi 👋, nice to meet you. \nI will help you practice your English conversation skills.\nYou can send voice 🎙 or text 💬 messages.`)
+    await ctx.reply("What English do you want to practice?", Markup.inlineKeyboard([
       [Markup.button.callback("🇬🇧 British", "practiceBritishEnglish"),
         Markup.button.callback("🇺🇸 American", "practiceAmericanEnglish")],
       // [Markup.button.callback("Polish", "practiceLanguagePolish")]
@@ -124,6 +126,7 @@ const selectTopic = async (ctx, index) => {
 bot.telegram.setMyCommands([
   { command: '/start', description: 'Choose English variant and level' },
   { command: '/topic', description: 'Change topic' },
+  { command: '/pronounce', description: 'Check pronounce' },
   // { command: '/spoilers', description: 'Hide or show text answers' },
   // { command: '/buy', description: 'Test buy' },
   // { command: '/check', description: 'Grammar check'},
@@ -162,6 +165,14 @@ bot.command('buy', async (ctx) => {
     await ctx.replyWithInvoice(getInvoice(ctx.from.id))
   } catch (error) {
     console.error('buy command: ', error.message)
+  }
+})
+
+bot.command('pronounce', async (ctx) => {
+  try {
+    const result = await pronounce.getPronunciationAssessment()
+  } catch (error) {
+    console.error('pronounce: ', error.message)
   }
 })
 
@@ -270,15 +281,15 @@ bot.action("practiceBritishEnglish", ga4.view('britishEnglish'), async (ctx) => 
   }
 })
 
-bot.action("practiceLanguagePolish", ga4.view('language polish'), async (ctx) => {
-  try {
-    ctx.session.settings.practiceLanguage = "Polish";
-    await ctx.editMessageText("Polish selected")
-    await selectLanguageLevel(ctx);
-  } catch (error) {
-    console.error('practiceLanguagePolish: ', error.message);
-  }
-})
+// bot.action("practiceLanguagePolish", ga4.view('language polish'), async (ctx) => {
+//   try {
+//     ctx.session.settings.practiceLanguage = "Polish";
+//     await ctx.editMessageText("Polish selected")
+//     await selectLanguageLevel(ctx);
+//   } catch (error) {
+//     console.error('practiceLanguagePolish: ', error.message);
+//   }
+// })
 
 bot.action("languageLevelBeginner", ga4.view('level beginner'), async (ctx) => {
   try {
@@ -324,8 +335,9 @@ bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
     const userId = ctx.message.from.id;
     const oggPath = await ogg.create(link.href, userId);
     const mp3Path = await ogg.toMp3(oggPath, userId);
-
+    const wavPath = await ogg.toWav(oggPath, userId);
     const text = await openAi.transcription(mp3Path, ctx.session.settings.practiceLanguage);
+    const pronaunceScore = await pronounce.getPronunciationAssessment(wavPath, text)
     const grammar = grammarCheck ? await openAi.chat({
       messages: [
         { role: openAi.roles.SYSTEM, content: `It is ${ctx.session.settings.practiceLanguage}. Correct my spelling and grammar. Return text in quotes. Text: "${text}"` }]
@@ -338,6 +350,11 @@ bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
     const response = await openAi.chat(ctx.session.messages);
     ctx.session.messages.push({ role: openAi.roles.ASSISTANT, content: response.content })
     const source = await textConverter.textToSpeech(`${response.content}`, ctx.session.settings.practiceLanguage)
+    ctx.session.lastCheckMessage?.message_id && await ctx.telegram.editMessageText(ctx.chat.id, ctx.session.lastCheckMessage.message_id, 0, ctx.session.lastCheckMessage.text)
+    ctx.session.lastCheckMessage = await ctx.replyWithHTML(`${text}`,   Markup.inlineKeyboard([
+      [Markup.button.callback(`👄 ${pronaunceScore}%`, "practiceBritishEnglish"),
+        Markup.button.callback("✏️ 100%", "practiceAmericanEnglish")],
+    ]).resize());
     await ctx.replyWithVoice({ source }, { caption: ctx.session.settings.hideQuestion ? spoiler(response.content) : response.content})
   } catch (error) {
     console.error('get voice: ', error.message) 

@@ -1,11 +1,11 @@
-import { unlink } from 'fs/promises'
-import * as Diff from "diff";
+import { unlink } from 'fs/promises';
+import * as Diff from 'diff';
 
 export async function removeFile(path) {
   try {
-    unlink(path)
+    unlink(path);
   } catch (error) {
-    console.log('removeFile', error.message)
+    console.log('removeFile', error.message);
   }
 }
 
@@ -13,33 +13,33 @@ export async function diff(one, other) {
   const allWords = one.split(' ').length;
   let errors = 0;
   const diff = Diff.diffWords(one, other);
-  let text = ""
+  let text = '';
   for (const item of diff) {
     if (item.added) {
-      text += `<u>${item.value}</u>`
-      errors += 1
+      text += `<u>${item.value}</u>`;
+      errors += 1;
     } else if (item.removed) {
-      text += `<s>${item.value}</s> `
+      text += `<s>${item.value}</s> `;
     } else {
-      text += item.value
+      text += item.value;
     }
-  };
-  const grammarScore = Math.round((allWords - errors) / allWords * 100) 
-  // const percentOfRight = allWords - errors 
+  }
+  const grammarScore = Math.round(((allWords - errors) / allWords) * 100);
+  // const percentOfRight = allWords - errors
   return { diffText: text, grammarScore };
 }
 
 export async function pronounceCorrect(pronounceText, pronounceWords) {
   const returnWords = pronounceText.split(' ');
-  let correctResult = ""
+  let correctResult = '';
   for (const [index, word] of pronounceWords.entries()) {
     if (word.PronunciationAssessment.AccuracyScore < 90) {
-      correctResult += `<u>${returnWords[index]}</u> `
+      correctResult += `<u>${returnWords[index]}</u> `;
     } else {
-      correctResult += `${returnWords[index]} `
+      correctResult += `${returnWords[index]} `;
     }
-  };
-  return correctResult
+  }
+  return correctResult;
 }
 
 export async function logAsyncFunctionTime(asyncFunction, functionName) {
@@ -48,7 +48,9 @@ export async function logAsyncFunctionTime(asyncFunction, functionName) {
     const result = await asyncFunction();
     const endTime = Date.now();
     const elapsedTime = endTime - startTime;
-    console.log(`Function: ${functionName} - Processing Time: ${elapsedTime}ms`);
+    console.log(
+      `Function: ${functionName} - Processing Time: ${elapsedTime}ms`,
+    );
     return result;
   } catch (error) {
     console.error(`Function: ${functionName} - Error: ${error.message}`);

@@ -1,17 +1,16 @@
-import { Configuration, OpenAIApi} from "openai";
+import { Configuration, OpenAIApi } from 'openai';
 import config from 'config';
 import { createReadStream } from 'fs';
 
 class OpenAI {
-
   roles = {
     ASSISTANT: 'assistant',
     USER: 'user',
     SYSTEM: 'system',
-  }
+  };
 
   constructor(apiKey) {
-    const configuration = new Configuration({ apiKey })
+    const configuration = new Configuration({ apiKey });
     this.openai = new OpenAIApi(configuration);
   }
 
@@ -19,35 +18,42 @@ class OpenAI {
     try {
       const response = await this.openai.createChatCompletion({
         model: 'gpt-3.5-turbo',
-        messages
-      })
-      return response.data.choices[0].message
+        messages,
+      });
+      return response.data.choices[0].message;
     } catch (error) {
-      console.log('openai chat error', error.message)
+      console.log('openai chat error', error.message);
     }
   }
 
   transcriptionLanguage = (language) => {
     switch (language) {
-      case "american":
-        return "en"
-      case "british": 
-        return "en"
-      case "Polish":
-        return "pl"
-      default: 
-        return "en"
+      case 'american':
+        return 'en';
+      case 'british':
+        return 'en';
+      case 'Polish':
+        return 'pl';
+      default:
+        return 'en';
     }
-  } 
+  };
 
   async transcription(filepath, language) {
     try {
-      const response = await this.openai.createTranscription(createReadStream(filepath), 'whisper-1', undefined, undefined, undefined, this.transcriptionLanguage(language));
-      return response.data.text
+      const response = await this.openai.createTranscription(
+        createReadStream(filepath),
+        'whisper-1',
+        undefined,
+        undefined,
+        undefined,
+        this.transcriptionLanguage(language),
+      );
+      return response.data.text;
     } catch (error) {
-      console.log('transcription error', error.message)
+      console.log('transcription error', error.message);
     }
   }
 }
 
-export const openAi = new OpenAI(config.get('OPENAI_KEY'))
+export const openAi = new OpenAI(config.get('OPENAI_KEY'));

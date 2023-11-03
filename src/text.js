@@ -1,18 +1,20 @@
-import { __dirname } from "./ogg.js"
+import { __dirname } from './ogg.js';
 import { resolve } from 'path';
-import { readFileSync } from 'fs'
+import { readFileSync } from 'fs';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
 import config from 'config';
 
 class TextConverter {
-
-  pathToKey = config.get('ENV') === 'prod' ? "../google-text-to-speech-prod.json" : "../google-text-to-speech-dev.json";
+  pathToKey =
+    config.get('ENV') === 'prod'
+      ? '../google-text-to-speech-prod.json'
+      : '../google-text-to-speech-dev.json';
 
   async getToken() {
     const key = JSON.parse(
-      readFileSync(resolve(__dirname, this.pathToKey), "utf-8")
-      )
+      readFileSync(resolve(__dirname, this.pathToKey), 'utf-8'),
+    );
 
     const token = jwt.sign(
       {
@@ -23,82 +25,80 @@ class TextConverter {
         iat: Math.floor(Date.now() / 1000),
       },
       key.private_key,
-      { algorithm: 'RS256' }
-    )
+      { algorithm: 'RS256' },
+    );
 
     const response = await axios.post(
       'https://www.googleapis.com/oauth2/v4/token',
       {
         grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
         assertion: token,
-      }
-    )
-    return response.data.access_token
+      },
+    );
+    return response.data.access_token;
   }
 
   async textToSpeech(text, language) {
     try {
-      const url = "https://us-central1-texttospeech.googleapis.com/v1beta1/text:synthesize";
-    
+      const url =
+        'https://us-central1-texttospeech.googleapis.com/v1beta1/text:synthesize';
+
       const calculateVoice = (language) => {
         switch (language) {
           case 'british': {
             return {
-              "languageCode": "en-GB",
-              "name": "en-GB-Neural2-A"
-            }
+              languageCode: 'en-GB',
+              name: 'en-GB-Neural2-A',
+            };
           }
           case 'american': {
             return {
-              "languageCode": "en-US",
-              "name": "en-US-Neural2-F"
-            }
+              languageCode: 'en-US',
+              name: 'en-US-Neural2-F',
+            };
           }
           case 'Polish': {
             return {
-              "languageCode": "pl-PL",
-              "name": "pl-PL-Standard-E"
-            }
+              languageCode: 'pl-PL',
+              name: 'pl-PL-Standard-E',
+            };
           }
           default: {
-          return {
-              "languageCode": "en-GB",
-              "name": "en-GB-Neural2-C"
-            }
+            return {
+              languageCode: 'en-GB',
+              name: 'en-GB-Neural2-C',
+            };
           }
         }
-      }
+      };
 
-    const data = {
-      "audioConfig": {
-        "audioEncoding": "OGG_OPUS",
-        "effectsProfileId": [
-          "handset-class-device"
-        ],
-        "pitch": 0,
-        "speakingRate": 1
-      },
-      "input": { text },
-      "voice": calculateVoice(language)
-    }
-      
-    const accessToken = await this.getToken()
-      
-    const response = await axios({
-      url,
-      method: "POST",
-      data,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      }
-    })
-      return Buffer.from(response.data.audioContent, 'base64')
+      const data = {
+        audioConfig: {
+          audioEncoding: 'OGG_OPUS',
+          effectsProfileId: ['handset-class-device'],
+          pitch: 0,
+          speakingRate: 1,
+        },
+        input: { text },
+        voice: calculateVoice(language),
+      };
+
+      const accessToken = await this.getToken();
+
+      const response = await axios({
+        url,
+        method: 'POST',
+        data,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      return Buffer.from(response.data.audioContent, 'base64');
     } catch (error) {
-      console.log('textToSpeech error', error.message)
+      console.log('textToSpeech error', error.message);
     }
-    
   }
 }
 
-export const textConverter = new TextConverter()
+export const textConverter = new TextConverter();

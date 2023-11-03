@@ -29,7 +29,8 @@ class Pronounce {
             var reco = new sdk.SpeechRecognizer(speechConfig, audioConfig);
             pronunciationAssessmentConfig.applyTo(reco);
 
-            function onRecognizedResult(result) {
+      function onRecognizedResult(result) {
+                // console.log("pronunciation assessment for: ", reference_text);
                 // console.log("pronunciation assessment for: ", result.text);
                 var pronunciation_result = sdk.PronunciationAssessmentResult.fromResult(result);
                 // console.log(" Accuracy score: ", pronunciation_result.accuracyScore, '\n',
@@ -40,13 +41,13 @@ class Pronounce {
                 // );
                 var prosodyScore = pronunciation_result.privPronJson.PronunciationAssessment.ProsodyScore
                 // console.log('MyPronScore', pronunciation_result.accuracyScore * 0.5 + prosodyScore * 0.2 + pronunciation_result.fluencyScore * 0.3)
-              // console.log("  Word-level details:");
-              console.log('Results', pronunciation_result);
+                // console.log("  Word-level details:");
                 // pronunciation_result.detailResult.Words.forEach( (word, idx) => {
                 //     console.log("    ", idx + 1, ": word: ", word.Word, "\taccuracy score: ", word.PronunciationAssessment.AccuracyScore, "\terror type: ", word.PronunciationAssessment.ErrorType, ";");
                 // });
-              reco.close();
-              return Math.round(pronunciation_result.accuracyScore * 0.5 + prosodyScore * 0.2 + pronunciation_result.fluencyScore * 0.3)
+                reco.close();
+                const pronounceScore = Math.round(pronunciation_result.accuracyScore * 0.5 + pronunciation_result.fluencyScore * 0.2 + pronunciation_result.completenessScore * 0.2 + prosodyScore * 0.1)
+                return { pronounceScore, pronounceText: result.text, pronounceWords: pronunciation_result.detailResult.Words, accuracyScore: pronunciation_result.accuracyScore, fluencyScore: pronunciation_result.fluencyScore}
             }
 
       
@@ -55,12 +56,11 @@ class Pronounce {
                     onRecognizedResult(successfulResult);
                 }
             )
-          return new Promise((resolve, reject) => {
-            reco.recognizeOnceAsync(
-                function (successfulResult) {
-                resolve(onRecognizedResult(successfulResult));
-                }
-            )
+      return new Promise((resolve, reject) => {
+                reco.recognizeOnceAsync(
+                  (successfulResult) =>  resolve(onRecognizedResult(successfulResult)),
+                  (error) => reject(error.message)
+                )
           })
     } catch(error) {
       console.log('getPronunciationAssessment error', error.message);

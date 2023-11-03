@@ -42,13 +42,13 @@ class TextConverter {
     
       const calculateVoice = (language) => {
         switch (language) {
-          case 'britishEnglish': {
+          case 'british': {
             return {
               "languageCode": "en-GB",
               "name": "en-GB-Neural2-A"
             }
           }
-          case 'americanEnglish': {
+          case 'american': {
             return {
               "languageCode": "en-US",
               "name": "en-US-Neural2-F"

@@ -29,9 +29,9 @@ class OpenAI {
 
   transcriptionLanguage = (language) => {
     switch (language) {
-      case "americanEnglish":
+      case "american":
         return "en"
-      case "britishEnglish": 
+      case "british": 
         return "en"
       case "Polish":
         return "pl"

@@ -6,8 +6,7 @@ import { ogg } from './ogg.js';
 import { pronounce } from './pronounce.js';
 import { openAi } from './openai.js'
 import { textConverter } from './text.js';
-import { spoiler } from 'telegraf/format'
-import { diff } from './utils.js';
+import { diff, logAsyncFunctionTime, pronounceCorrect } from './utils.js';
 import TelegrafGA4 from 'telegraf-ga4';
 
 const bot = new Telegraf(config.get('TELEGRAM_TOKEN'))
@@ -29,10 +28,9 @@ bot.use(session)
 bot.use(ga4.middleware());
 
 const settings = {
-  hideQuestion: false,
   grammarCheck: true,
-  practiceLanguage: 'English',
-  languageLevel: 'basic',
+  practiceLanguage: 'British English',
+  languageLevel: 'Intermediate',
   topics: [],
   selectedTopic: "",
 }
@@ -42,6 +40,9 @@ const INITIAL_SESSION = {
   topicMessages: [],
   settings,
   lastCheckMessage: {},
+  diffText: '',
+  pronounce: {},
+  lastResponse: "",
 }
 
 const selectLanguageLevel = async (ctx) => {
@@ -64,7 +65,7 @@ const setChatGptSettings = async (ctx) => {
       role: openAi.roles.SYSTEM, content: `Act as ${language} language teacher. Let's practice some dialogues. Answer in ${level} ${language} language, with maximum 2 sentences. Ask question at the end.`
     })
     ctx.session.topicMessages.push({
-      role: openAi.roles.SYSTEM, content: `Answer only in ${language} language. Suggest numbered list of 3 topics for discuss at the ${level} level. Only titles. Maximum 44 characters each topic. No need to write amount of symbols`
+      role: openAi.roles.SYSTEM, content: `Suggest numbered list of 3 simple topics for discuss. Only titles. Maximum 44 characters each topic. No need to write amount of symbols`
     })
   } catch (error) {
     console.error('setChatGptSettings: ', error.message)
@@ -102,7 +103,6 @@ const initialization = async (ctx) => {
     await ctx.reply("What English do you want to practice?", Markup.inlineKeyboard([
       [Markup.button.callback("🇬🇧 British", "practiceBritishEnglish"),
         Markup.button.callback("🇺🇸 American", "practiceAmericanEnglish")],
-      // [Markup.button.callback("Polish", "practiceLanguagePolish")]
     ]))
   } catch (error) {
     console.error('initialization error: ', error.message)
@@ -115,9 +115,10 @@ const selectTopic = async (ctx, index) => {
     ctx.editMessageText('🎯 ' + ctx.session.settings.selectedTopic)
     ctx.session.messages.push({ role: openAi.roles.USER, content: `Let's discuss: ${ctx.session.settings.selectedTopic}` })
     const response = await openAi.chat(ctx.session.messages);
+    ctx.session.lastResponse = response.content;
     ctx.session.messages.push({ role: openAi.roles.ASSISTANT, content: response.content })
     const source = await textConverter.textToSpeech(response.content, ctx.session.settings.practiceLanguage)
-    await ctx.replyWithVoice({ source }, { caption: ctx.session.settings.hideQuestion ? spoiler(response.content) : response.content})
+    await ctx.replyWithVoice({ source })
   } catch (error) {
     console.error('selectTopic: ', error.message)
   }
@@ -126,10 +127,7 @@ const selectTopic = async (ctx, index) => {
 bot.telegram.setMyCommands([
   { command: '/start', description: 'Choose English variant and level' },
   { command: '/topic', description: 'Change topic' },
-  { command: '/pronounce', description: 'Check pronounce' },
-  // { command: '/spoilers', description: 'Hide or show text answers' },
   // { command: '/buy', description: 'Test buy' },
-  // { command: '/check', description: 'Grammar check'},
 ])
 
 bot.command('start', ga4.view('start'), async (ctx) => {
@@ -168,14 +166,6 @@ bot.command('buy', async (ctx) => {
   }
 })
 
-bot.command('pronounce', async (ctx) => {
-  try {
-    const result = await pronounce.getPronunciationAssessment()
-  } catch (error) {
-    console.error('pronounce: ', error.message)
-  }
-})
-
 bot.command('topic', ga4.view('new dialog'), async (ctx) => {
   try {
     ctx.session = {
@@ -187,15 +177,6 @@ bot.command('topic', ga4.view('new dialog'), async (ctx) => {
     await getTopic(ctx)
   } catch (error) {
     console.error('new command: ', error.message)
-  }
-})
-
-bot.command('spoilers', ga4.view('toggle spoilers'), async (ctx) => {
-  try {
-    ctx.session.settings.hideQuestion = !ctx.session.settings.hideQuestion;
-    ctx.session.settings.hideQuestion ? await ctx.reply('Spoiler activated') : await ctx.reply('Spoiler disabled');
-  } catch (error) {
-    console.error('spoilers command: ', error.message)
   }
 })
 
@@ -263,9 +244,10 @@ bot.action("myOwnTopicHandler", ga4.view('topic own'), async (ctx) => {
 
 bot.action("practiceAmericanEnglish", ga4.view('american english'), async (ctx) => {
   try {
-    ctx.session.settings.practiceLanguage = "americanEnglish";
+    ctx.session.settings.practiceLanguage = "american";
     await ctx.editMessageText("🇺🇸 American selected")
-    await selectLanguageLevel(ctx);
+    await setChatGptSettings(ctx);
+    await getTopic(ctx);
   } catch (error) {
     console.error('practiceAmericanEnglish: ', error.message);
   }
@@ -273,118 +255,147 @@ bot.action("practiceAmericanEnglish", ga4.view('american english'), async (ctx) 
 
 bot.action("practiceBritishEnglish", ga4.view('britishEnglish'), async (ctx) => {
   try {
-    ctx.session.settings.practiceLanguage = "britishEnglish";
+    ctx.session.settings.practiceLanguage = "british";
     await ctx.editMessageText("🇬🇧 British English selected")
-    await selectLanguageLevel(ctx);
+    await setChatGptSettings(ctx);
+    await getTopic(ctx);
   } catch (error) {
     console.error('practiceBritishEnglish: ', error.message);
   }
 })
 
-// bot.action("practiceLanguagePolish", ga4.view('language polish'), async (ctx) => {
-//   try {
-//     ctx.session.settings.practiceLanguage = "Polish";
-//     await ctx.editMessageText("Polish selected")
-//     await selectLanguageLevel(ctx);
-//   } catch (error) {
-//     console.error('practiceLanguagePolish: ', error.message);
-//   }
-// })
-
-bot.action("languageLevelBeginner", ga4.view('level beginner'), async (ctx) => {
+bot.action("showGrammarDetails", ga4.view('show grammar details'), async (ctx) => {
   try {
-    ctx.session.settings.languageLevel = "basic";
-    await setChatGptSettings(ctx);
-    await ctx.editMessageText("🙋 Basic level selected")
-    await getTopic(ctx);
+    ctx.editMessageText(`<b>Correct grammar:</b>\n${ctx.session.diffText}`, {
+      ...Markup.inlineKeyboard([
+        [Markup.button.callback(`👄 ${ctx.session.pronounce.pronounceScore}%`, "showPronounceDetails"),
+        Markup.button.callback(`✏️ ${ctx.session.grammarScore}%`, "empty")],
+      ]), parse_mode: 'HTML'
+    })
   } catch (error) {
-    console.error('languageLevelBeginner: ', error.message);
+    console.error('practiceAmericanEnglish: ', error.message);
   }
 })
 
-bot.action("languageLevelIntermediate", ga4.view('level intermediate'), async (ctx) => {
+bot.action("showPronounceDetails", ga4.view('show grammar details'), async (ctx) => {
   try {
-    ctx.session.settings.languageLevel = "intermediate";
-    await setChatGptSettings(ctx);
-    await ctx.editMessageText("🧑‍🏫️ Intermediate level selected");
-    await getTopic(ctx);
+    ctx.editMessageText(`<b>Correct pronunciation:</b>\n${ctx.session.pronounceText}\n\nAccuracy: ${ctx.session.pronounce.accuracyScore}%  Fluency: ${ctx.session.pronounce.fluencyScore}%`, {
+      ...Markup.inlineKeyboard([
+        [Markup.button.callback(`👄 ${ctx.session.pronounce.pronounceScore}%`, "empty"),
+        Markup.button.callback(`✏️ ${ctx.session.grammarScore}%`, "showGrammarDetails")],
+      ]), parse_mode: 'HTML'
+    })
   } catch (error) {
-    console.error('languageLevelIntermediate: ', error.message);
+    console.error('practiceAmericanEnglish: ', error.message);
   }
 })
 
-bot.action("languageLevelAdvanced", ga4.view('level advanced'), async (ctx) => {
-  try {
-    ctx.session.settings.languageLevel = "advanced";
-    await setChatGptSettings(ctx);
-    await ctx.editMessageText("🧑‍🎓️ Advanced level selected");
-    await getTopic(ctx);
-  } catch (error) {
-    console.error('languageLevelAdvanced: ', error.message);
-  }
-})
+bot.hears('🔤 Show text', ga4.view('show text'), async (ctx) => {
+  ctx.sendChatAction('typing');
+  ctx?.session?.lastResponse ? await ctx.reply(ctx.session.lastResponse) : ctx.reply('No text yet...')
+});
+
+bot.hears('🆘 Hint please', ga4.view('hint please'), async (ctx) => {
+  ctx.sendChatAction('typing');
+  const response = ctx?.session?.lastResponse && await logAsyncFunctionTime(() => openAi.chat({
+  messages: [
+      { role: openAi.roles.SYSTEM, content: `Give 3 answers to this question, each in one short and simple sentence in basic level English. Use bullet list.` },
+      { role: openAi.roles.USER, content: ctx.session.lastResponse }]
+  }.messages), 'openAi - hint')
+  response?.content && await ctx.reply(response.content);
+});
+
+bot.hears('🔄 Change topic', ga4.view('change topic'), async (ctx) => {
+  ctx.reply('Some topics');
+});
+
+bot.hears('🏁 Finish & feedback', ga4.view('finish & feedback'), async (ctx) => {
+  ctx.reply('Some feedback');
+});
+
 
 bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
   try {
+    ctx.sendChatAction('typing');
     if (!ctx.session.settings) {
       return initialization(ctx);
     }
-    ctx.sendChatAction('record_voice');
     const { grammarCheck } = ctx.session.settings;
     const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id)
     const userId = ctx.message.from.id;
     const oggPath = await ogg.create(link.href, userId);
-    const mp3Path = await ogg.toMp3(oggPath, userId);
-    const wavPath = await ogg.toWav(oggPath, userId);
-    const text = await openAi.transcription(mp3Path, ctx.session.settings.practiceLanguage);
-    const pronaunceScore = await pronounce.getPronunciationAssessment(wavPath, text)
-    const grammar = grammarCheck ? await openAi.chat({
-      messages: [
-        { role: openAi.roles.SYSTEM, content: `It is ${ctx.session.settings.practiceLanguage}. Correct my spelling and grammar. Return text in quotes. Text: "${text}"` }]
-    }.messages) : null;
-    const corrected = grammar.content.match(/.*"([^"]+)"/)[0].slice(1, -1);
-    const diffText = await diff(text, corrected)
-    grammarCheck && corrected !== text ? await ctx.replyWithHTML(`Correct: ${diffText}`) : null;
+    const [mp3Path, wavPath] = await Promise.all([ogg.toMp3(oggPath, userId), ogg.toWav(oggPath, userId)])
+    let text = await logAsyncFunctionTime( () => openAi.transcription(mp3Path, ctx.session.settings.practiceLanguage), 'openAi - transcript audio');
+    text = /[A-Za-z]$/.test(text) ? text + "." : text
     ctx.session.messages = cutLongTermMemory(ctx.session.messages, 11, 2);
     ctx.session.messages.push({ role: openAi.roles.USER, content: text })
-    const response = await openAi.chat(ctx.session.messages);
-    ctx.session.messages.push({ role: openAi.roles.ASSISTANT, content: response.content })
-    const source = await textConverter.textToSpeech(`${response.content}`, ctx.session.settings.practiceLanguage)
-    ctx.session.lastCheckMessage?.message_id && await ctx.telegram.editMessageText(ctx.chat.id, ctx.session.lastCheckMessage.message_id, 0, ctx.session.lastCheckMessage.text)
-    ctx.session.lastCheckMessage = await ctx.replyWithHTML(`${text}`,   Markup.inlineKeyboard([
-      [Markup.button.callback(`👄 ${pronaunceScore}%`, "practiceBritishEnglish"),
-        Markup.button.callback("✏️ 100%", "practiceAmericanEnglish")],
+    const [{ pronounceScore, pronounceText, pronounceWords, accuracyScore, fluencyScore }, grammar, response] = await Promise.all([
+      logAsyncFunctionTime(() => pronounce.getPronunciationAssessment(wavPath, text), 'microsoft - pronounce assasment'),
+      logAsyncFunctionTime(() => openAi.chat({
+        messages: [
+          { role: openAi.roles.SYSTEM, content: `It is ${ctx.session.settings.practiceLanguage}. Correct my spelling and grammar. Return text in quotes. Text: "${text}"` }]
+      }.messages), 'openAi - check grammar'),
+      logAsyncFunctionTime(() => openAi.chat(ctx.session.messages), 'openAi - make answer')
+    ]);
+    ctx.sendChatAction('typing');
+    const corrected = grammar.content.match(/.*"([^"]+)"/)[0].slice(1, -1);
+    const { diffText, grammarScore } = await diff(text, corrected);
+    ctx.session.diffText = diffText;
+    ctx.session.grammarScore = grammarScore;
+    ctx.session.pronounce = { pronounceScore, accuracyScore, fluencyScore };
+    ctx.session.pronounceText = await pronounceCorrect(pronounceText, pronounceWords);
+    ctx.session?.lastCheckMessage?.message_id && await ctx.telegram.editMessageText(ctx.chat.id, ctx.session.lastCheckMessage.message_id, 0, ctx.session.lastCheckMessage.text, { entities: ctx.session.lastCheckMessage.entities });
+    ctx.session.lastCheckMessage = {};
+    ctx.sendChatAction('typing');
+    ctx.session.lastCheckMessage = await ctx.replyWithHTML(`<b>Your message:</b>\n${text}`,   Markup.inlineKeyboard([
+      [Markup.button.callback(`👄 ${ctx.session.pronounce.pronounceScore}%`, "showPronounceDetails"),
+        Markup.button.callback(`✏️ ${ctx.session.grammarScore}%`, "showGrammarDetails")],
     ]).resize());
-    await ctx.replyWithVoice({ source }, { caption: ctx.session.settings.hideQuestion ? spoiler(response.content) : response.content})
+    ctx.sendChatAction('record_voice');
+    ctx.session.messages.push({ role: openAi.roles.ASSISTANT, content: response.content })
+    const source = await logAsyncFunctionTime(() => textConverter.textToSpeech(`${response.content}`, ctx.session.settings.practiceLanguage), 'google - text to speech')
+    ctx.session.lastResponse = response.content;
+    await ctx.replyWithVoice({ source }
+      , Markup.keyboard([
+        [Markup.button.callback(`🔤 Show text`, "empty"),
+        Markup.button.callback(`🆘 Hint please`, "showGrammarDetails")],[Markup.button.callback(`🔄 Change topic`, "changeTopics"),
+        Markup.button.callback(`🏁 Finish & feedback`, "showGrammarDetails")]
+      ]).resize()
+    )
+    console.log("=============================================================================")
   } catch (error) {
     console.error('get voice: ', error.message) 
   }
 })
 
-bot.on(message('text'), ga4.view('user text message'), async (ctx) => {
+bot.on(message('text'), ga4.view('user text message'), async (ctx, next) => {
   try {
     if (!ctx.session.settings) {
       return initialization(ctx);
     }
-    ctx.sendChatAction('record_voice');
-    const { grammarCheck } = ctx.session.settings;
-    const grammar = grammarCheck ? await openAi.chat({
-      messages: [
-        { role: openAi.roles.SYSTEM, content: `It is ${ctx.session.settings.practiceLanguage}. Correct my spelling and grammar. Return text in quotes. Text: "${ctx.message.text}"` }]
-    }.messages) : null;
-    const corrected = grammar.content.match(/.*"([^"]+)"/)[0].slice(1, -1);
-    const diffText = await diff(ctx.message.text, corrected)
-    grammarCheck && corrected.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"") !== ctx.message.text.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"") ? await ctx.replyWithHTML(`Correct: ${diffText}`) : null;
-    ctx.session.messages = cutLongTermMemory(ctx.session.messages, 11, 2);
-    ctx.session.messages.push({ role: openAi.roles.USER, content: ctx.message.text })
-    const response = await openAi.chat(ctx.session.messages);
-    ctx.session.messages.push({ role: openAi.roles.ASSISTANT, content: response.content })
-    const source = await textConverter.textToSpeech(response.content, ctx.session.settings.practiceLanguage)
-    await ctx.replyWithVoice({ source }, { caption: ctx.session.settings.hideQuestion ? spoiler(response.content) : response.content })
-
+    // ctx.sendChatAction('record_voice');
+    // const { grammarCheck } = ctx.session.settings;
+    // const grammar = grammarCheck ? await openAi.chat({
+    //   messages: [
+    //     { role: openAi.roles.SYSTEM, content: `It is ${ctx.session.settings.practiceLanguage}. Correct my spelling and grammar. Return text in quotes. Text: "${ctx.message.text}"` }]
+    // }.messages) : null;
+    // const corrected = grammar.content.match(/.*"([^"]+)"/)[0].slice(1, -1);
+    // const diffText = await diff(ctx.message.text, corrected)
+    // grammarCheck && corrected.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"") !== ctx.message.text.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"") ? await ctx.replyWithHTML(`Correct: ${diffText}`) : null;
+    // ctx.session.messages = cutLongTermMemory(ctx.session.messages, 11, 2);
+    // ctx.session.messages.push({ role: openAi.roles.USER, content: ctx.message.text })
+    // const response = await openAi.chat(ctx.session.messages);
+    // ctx.session.messages.push({ role: openAi.roles.ASSISTANT, content: response.content })
+    // const source = await textConverter.textToSpeech(response.content, ctx.session.settings.practiceLanguage)
+    // await ctx.replyWithVoice({ source }, { caption: response.content })
+    await ctx.reply('Please record audio, text message is temporarily off')
   } catch (error) {
     console.error('get text: ', error.message) 
   }
+})
+
+bot.catch((err, ctx) => {
+  console.log(`Ooops, encountered an error for ${ctx.updateType}`, err)
 })
 
 bot.launch()

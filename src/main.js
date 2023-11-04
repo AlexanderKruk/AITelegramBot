@@ -396,7 +396,9 @@ bot.hears('🆘 Hint please', ga4.view('hint please'), async (ctx) => {
         ),
       'openAi - hint',
     ));
-  response?.content && (await ctx.reply(`You can say:\n${response.content}`));
+  response?.content
+    ? await ctx.replyWithHTML(`<b>You can say:</b>\n${response.content}`)
+    : await ctx.reply('We have some issues. Please try again.');
 });
 
 bot.hears('🔄 Change topic', ga4.view('change topic'), async (ctx) => {

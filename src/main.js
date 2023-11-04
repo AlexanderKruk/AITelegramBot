@@ -426,19 +426,27 @@ bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
     if (!ctx.session.settings) {
       return initialization(ctx);
     }
-    const { grammarCheck } = ctx.session.settings;
-    const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id);
-    const userId = ctx.message.from.id;
-    const oggPath = await ogg.create(link.href, userId);
-    const [mp3Path, wavPath] = await Promise.all([
-      ogg.toMp3(oggPath, userId),
-      ogg.toWav(oggPath, userId),
-    ]);
-    let text = await logAsyncFunctionTime(
-      () =>
-        openAi.transcription(mp3Path, ctx.session.settings.practiceLanguage),
-      'openAi - transcript audio',
-    );
+    const link =
+      ctx?.message?.voice?.file_id &&
+      (await ctx.telegram.getFileLink(ctx.message.voice.file_id));
+    const userId = ctx?.message?.from?.id && ctx.message.from.id;
+    const oggPath =
+      link?.href && userId && (await ogg.create(link.href, userId));
+    const [mp3Path, wavPath] =
+      oggPath &&
+      userId &&
+      (await Promise.all([
+        ogg.toMp3(oggPath, userId),
+        ogg.toWav(oggPath, userId),
+      ]));
+    let text =
+      mp3Path &&
+      ctx?.session?.settings?.practiceLanguage &&
+      (await logAsyncFunctionTime(
+        () =>
+          openAi.transcription(mp3Path, ctx.session.settings.practiceLanguage),
+        'openAi - transcript audio',
+      ));
     text = /[A-Za-z]$/.test(text) ? text + '.' : text;
     ctx.session.messages = cutLongTermMemory(ctx.session.messages, 11, 2);
     ctx.session.messages.push({ role: openAi.roles.USER, content: text });
@@ -477,11 +485,16 @@ bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
       ),
     ]);
     ctx.sendChatAction('typing');
-    const corrected = grammar.content.match(/.*"([^"]+)"/)[0].slice(1, -1);
+    const corrected =
+      grammar?.content?.match(/.*"([^"]+)"/)[0].slice(1, -1) || '';
     const { diffText, grammarScore } = await diff(text, corrected);
-    ctx.session.diffText = diffText;
-    ctx.session.grammarScore = grammarScore;
-    ctx.session.pronounce = { pronounceScore, accuracyScore, fluencyScore };
+    ctx.session.diffText = diffText || '';
+    ctx.session.grammarScore = grammarScore || '-';
+    ctx.session.pronounce = {
+      pronounceScore: pronounceScore || '-',
+      accuracyScore: accuracyScore || '-',
+      fluencyScore: fluencyScore || '-',
+    };
     ctx.session.pronounceText = await pronounceCorrect(
       pronounceText,
       pronounceWords,
@@ -497,15 +510,17 @@ bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
     ctx.session.lastCheckMessage = {};
     ctx.sendChatAction('typing');
     ctx.session.lastCheckMessage = await ctx.replyWithHTML(
-      `<b>Your message:</b>\n${text}`,
+      `<b>Your message:</b>\n${
+        text || 'Something bad happened, send the message again please.'
+      }`,
       Markup.inlineKeyboard([
         [
           Markup.button.callback(
-            `👄 ${ctx.session.pronounce.pronounceScore}%`,
+            `👄 ${ctx.session?.pronounce?.pronounceScore || '-'}%`,
             'showPronounceDetails',
           ),
           Markup.button.callback(
-            `✏️ ${ctx.session.grammarScore}%`,
+            `✏️ ${ctx.session?.grammarScore || '-'}%`,
             'showGrammarDetails',
           ),
         ],
@@ -516,28 +531,34 @@ bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
       role: openAi.roles.ASSISTANT,
       content: response.content,
     });
-    const source = await logAsyncFunctionTime(
-      () =>
-        textConverter.textToSpeech(
-          `${response.content}`,
-          ctx.session.settings.practiceLanguage,
-        ),
-      'google - text to speech',
-    );
-    ctx.session.lastResponse = response.content;
-    await ctx.replyWithVoice(
-      { source },
-      Markup.keyboard([
-        [
-          Markup.button.callback(`🔤 Show text`, 'empty'),
-          Markup.button.callback(`🆘 Hint please`, 'showGrammarDetails'),
-        ],
-        [
-          Markup.button.callback(`🔄 Change topic`, 'changeTopics'),
-          Markup.button.callback(`🏁 Finish & feedback`, 'showGrammarDetails'),
-        ],
-      ]).resize(),
-    );
+    const source =
+      response?.content &&
+      (await logAsyncFunctionTime(
+        () =>
+          textConverter.textToSpeech(
+            `${response.content || ''}`,
+            ctx.session.settings.practiceLanguage,
+          ),
+        'google - text to speech',
+      ));
+    ctx.session.lastResponse = response?.content || '';
+    source &&
+      (await ctx.replyWithVoice(
+        { source },
+        Markup.keyboard([
+          [
+            Markup.button.callback(`🔤 Show text`, 'empty'),
+            Markup.button.callback(`🆘 Hint please`, 'showGrammarDetails'),
+          ],
+          [
+            Markup.button.callback(`🔄 Change topic`, 'changeTopics'),
+            Markup.button.callback(
+              `🏁 Finish & feedback`,
+              'showGrammarDetails',
+            ),
+          ],
+        ]).resize(),
+      ));
     console.log(
       '=============================================================================',
     );

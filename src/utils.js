@@ -29,7 +29,7 @@ export function diff(one, other) {
   return { diffText: text, grammarScore };
 }
 
-export function pronounceCorrect(pronounceText, pronounceWords) {
+export function pronounceCorrect(pronounceText = '', pronounceWords = []) {
   const returnWords = pronounceText.split(' ');
   let correctResult = '';
   for (const [index, word] of pronounceWords.entries()) {

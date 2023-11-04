@@ -16,7 +16,7 @@ class Pronounce {
       );
       var speechConfig = sdk.SpeechConfig.fromSubscription(
         config.get('MS_SUBSCRIPTION_KEY'),
-        'eastus',
+        'germanywestcentral',
       );
       // create pronunciation assessment config, set grading system, granularity and if enable miscue based on your requirement.
       const pronunciationAssessmentConfig =

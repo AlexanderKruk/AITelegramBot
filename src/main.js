@@ -508,7 +508,7 @@ bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
         { entities: ctx.session.lastCheckMessage.entities },
       ));
     ctx.session.lastCheckMessage = {};
-    ctx.sendChatAction('typing');
+    // ctx.sendChatAction('typing');
     ctx.session.lastCheckMessage = await ctx.replyWithHTML(
       `<b>Your message:</b>\n${
         text || 'Something bad happened, send the message again please.'

@@ -6,8 +6,14 @@ import { ogg } from './ogg.js';
 import { pronounce } from './pronounce.js';
 import { openAi } from './openai.js';
 import { textConverter } from './text.js';
-import { diff, logAsyncFunctionTime, pronounceCorrect } from './utils.js';
+import {
+  diff,
+  logAsyncFunctionTime,
+  pronounceCorrect,
+  getRandomIndexes,
+} from './utils.js';
 import TelegrafGA4 from 'telegraf-ga4';
+import { topics } from './topics.js';
 
 const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
 
@@ -37,32 +43,11 @@ const settings = {
 
 const INITIAL_SESSION = {
   messages: [],
-  topicMessages: [],
   settings,
   lastCheckMessage: {},
   diffText: '',
   pronounce: {},
   lastResponse: '',
-};
-
-const selectLanguageLevel = async (ctx) => {
-  try {
-    await ctx.reply(
-      'Select your language level',
-      Markup.inlineKeyboard([
-        [Markup.button.callback('🙋 Basic', 'languageLevelBeginner')],
-        [
-          Markup.button.callback(
-            '🧑‍🏫️ Intermediate',
-            'languageLevelIntermediate',
-          ),
-        ],
-        [Markup.button.callback('🧑‍🎓️ Advanced', 'languageLevelAdvanced')],
-      ]),
-    );
-  } catch (error) {
-    console.error('selectLanguageLevel: ', error.message);
-  }
 };
 
 const setChatGptSettings = async (ctx) => {
@@ -73,10 +58,6 @@ const setChatGptSettings = async (ctx) => {
     ctx.session.messages.push({
       role: openAi.roles.SYSTEM,
       content: `Act as ${language} language teacher. Let's practice some dialogues. Answer in ${level} ${language} language, with maximum 2 sentences. Ask question at the end.`,
-    });
-    ctx.session.topicMessages.push({
-      role: openAi.roles.SYSTEM,
-      content: `Suggest numbered list of 3 simple topics for discuss. Only titles. Maximum 44 characters each topic. No need to write amount of symbols`,
     });
   } catch (error) {
     console.error('setChatGptSettings: ', error.message);
@@ -96,14 +77,13 @@ const cutLongTermMemory = (data = [], length, startFrom) => {
 
 const getTopic = async (ctx) => {
   try {
-    const rawTopics = await openAi.chat(ctx.session.topicMessages);
-    ctx.session.topicMessages.push({
-      role: openAi.roles.ASSISTANT,
-      content: rawTopics.content,
-    });
-    ctx.session.settings.topics = rawTopics.content
-      .split('\n')
-      .map((item) => item.slice(3).replace(/['"]+/g, ''));
+    const topicIndexes = getRandomIndexes(109, 3);
+    if (ctx?.session?.settings?.topics) {
+      ctx.session.settings.topics = [];
+      for (const index of topicIndexes) {
+        ctx.session.settings.topics.push(topics[index]);
+      }
+    }
     await ctx.reply(
       'What do you want to talk about? Select a topic:',
       Markup.inlineKeyboard([
@@ -159,7 +139,8 @@ const initialization = async (ctx) => {
 const selectTopic = async (ctx, index) => {
   try {
     ctx.session.settings.selectedTopic = ctx.session.settings.topics[index];
-    ctx.editMessageText('🎯 ' + ctx.session.settings.selectedTopic);
+    ctx?.session?.settings?.selectedTopic &&
+      ctx.editMessageText(ctx.session.settings.selectedTopic);
     ctx.session.messages.push({
       role: openAi.roles.USER,
       content: `Let's discuss: ${ctx.session.settings.selectedTopic}`,
@@ -182,7 +163,6 @@ const selectTopic = async (ctx, index) => {
 
 bot.telegram.setMyCommands([
   { command: '/start', description: 'Choose English variant and level' },
-  { command: '/topic', description: 'Change topic' },
   // { command: '/buy', description: 'Test buy' },
 ]);
 
@@ -224,20 +204,6 @@ bot.command('buy', async (ctx) => {
   }
 });
 
-bot.command('topic', ga4.view('new dialog'), async (ctx) => {
-  try {
-    ctx.session = {
-      ...structuredClone(INITIAL_SESSION),
-      settings: ctx?.session?.settings || settings,
-      topicMessages: ctx?.session?.topicMessages || [],
-    };
-    await setChatGptSettings(ctx);
-    await getTopic(ctx);
-  } catch (error) {
-    console.error('new command: ', error.message);
-  }
-});
-
 bot.command('check', async (ctx) => {
   try {
     ctx.session.settings.grammarCheck = !ctx.session.settings.grammarCheck;
@@ -251,25 +217,15 @@ bot.command('check', async (ctx) => {
 
 bot.action('changeTopics', ga4.view('topics change'), async (ctx) => {
   try {
-    ctx.session.topicMessages = cutLongTermMemory(
-      ctx.session.topicMessages,
-      11,
-      1,
-    );
-    ctx.session.topicMessages.push({
-      role: openAi.roles.USER,
-      content: `Update topics`,
-    });
-    const rawTopics = await openAi.chat(ctx.session.topicMessages);
-    ctx.session.topicMessages.push({
-      role: openAi.roles.ASSISTANT,
-      content: rawTopics.content,
-    });
-    ctx.session.settings.topics = rawTopics.content
-      .split('\n')
-      .map((item) => item.replace(/['"]+/g, ''));
+    const topicIndexes = getRandomIndexes(109, 3);
+    if (ctx?.session?.settings?.topics) {
+      ctx.session.settings.topics = [];
+      for (const index of topicIndexes) {
+        ctx.session.settings.topics.push(topics[index]);
+      }
+    }
     await ctx.editMessageText(
-      'What do you want to talk about? Select a topic:',
+      'What do you want to talk about?',
       Markup.inlineKeyboard([
         [
           Markup.button.callback(
@@ -440,11 +396,20 @@ bot.hears('🆘 Hint please', ga4.view('hint please'), async (ctx) => {
         ),
       'openAi - hint',
     ));
-  response?.content && (await ctx.reply(response.content));
+  response?.content && (await ctx.reply(`You can say:\n${response.content}`));
 });
 
 bot.hears('🔄 Change topic', ga4.view('change topic'), async (ctx) => {
-  ctx.reply('Some topics');
+  try {
+    ctx.session = {
+      ...structuredClone(INITIAL_SESSION),
+      settings: ctx?.session?.settings || settings,
+    };
+    await setChatGptSettings(ctx);
+    await getTopic(ctx);
+  } catch (error) {
+    console.error('new command: ', error.message);
+  }
 });
 
 bot.hears(

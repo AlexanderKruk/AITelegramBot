@@ -9,7 +9,7 @@ export async function removeFile(path) {
   }
 }
 
-export async function diff(one, other) {
+export function diff(one, other) {
   const allWords = one.split(' ').length;
   let errors = 0;
   const diff = Diff.diffWords(one, other);
@@ -29,7 +29,7 @@ export async function diff(one, other) {
   return { diffText: text, grammarScore };
 }
 
-export async function pronounceCorrect(pronounceText, pronounceWords) {
+export function pronounceCorrect(pronounceText, pronounceWords) {
   const returnWords = pronounceText.split(' ');
   let correctResult = '';
   for (const [index, word] of pronounceWords.entries()) {
@@ -56,4 +56,15 @@ export async function logAsyncFunctionTime(asyncFunction, functionName) {
     console.error(`Function: ${functionName} - Error: ${error.message}`);
     throw error;
   }
+}
+
+export function getRandomIndexes(max, count) {
+  const indexes = [];
+  while (indexes.length < count) {
+    const randomIndex = Math.floor(Math.random() * max);
+    if (!indexes.includes(randomIndex)) {
+      indexes.push(randomIndex);
+    }
+  }
+  return indexes;
 }

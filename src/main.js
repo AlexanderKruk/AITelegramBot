@@ -162,7 +162,7 @@ const selectTopic = async (ctx, index) => {
 };
 
 bot.telegram.setMyCommands([
-  { command: '/start', description: 'Choose English variant and level' },
+  { command: '/start', description: 'Start' },
   // { command: '/buy', description: 'Test buy' },
 ]);
 

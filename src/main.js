@@ -133,9 +133,13 @@ const initialization = async (ctx) => {
 
 const selectTopic = async (ctx, index) => {
   try {
+    ctx.sendChatAction('record_voice');
     ctx.session.settings.selectedTopic = ctx.session.settings.topics[index];
     ctx?.session?.settings?.selectedTopic &&
-      ctx.editMessageText(ctx.session.settings.selectedTopic);
+      ctx.editMessageText(
+        `<b>Topic:</b> ${ctx.session.settings.selectedTopic}`,
+        { parse_mode: 'HTML' },
+      );
     ctx.session.messages.push({
       role: openAi.roles.USER,
       content: `Let's discuss: ${ctx.session.settings.selectedTopic}`,
@@ -259,7 +263,9 @@ bot.action(
   async (ctx) => {
     try {
       ctx.session.settings.practiceLanguage = 'american';
-      await ctx.editMessageText('🇺🇸 American selected');
+      await ctx.editMessageText('<b>Language:</b> 🇺🇸 American English', {
+        parse_mode: 'HTML',
+      });
       await setChatGptSettings(ctx);
       await getTopic(ctx);
     } catch (error) {
@@ -275,7 +281,9 @@ bot.action(
   async (ctx) => {
     try {
       ctx.session.settings.practiceLanguage = 'british';
-      await ctx.editMessageText('🇬🇧 British English selected');
+      await ctx.editMessageText('<b>Language:</b> 🇬🇧 British English', {
+        parse_mode: 'HTML',
+      });
       await setChatGptSettings(ctx);
       await getTopic(ctx);
     } catch (error) {

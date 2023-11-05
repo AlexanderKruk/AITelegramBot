@@ -16,7 +16,7 @@ import {
 import TelegrafGA4 from 'telegraf-ga4';
 import { topics } from './topics.js';
 
-const ERROR_MESSAGE = 'Ooops. Please try again or write /start.';
+const ERROR_MESSAGE = 'Ooops. Please try again or /start.';
 
 const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
 

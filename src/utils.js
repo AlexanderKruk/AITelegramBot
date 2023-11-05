@@ -68,3 +68,14 @@ export function getRandomIndexes(max, count) {
   }
   return indexes;
 }
+
+export const cutLongTermMemory = (data = [], length, startFrom) => {
+  const dataLength = data.length;
+  if (dataLength > length - startFrom) {
+    return [
+      ...data.slice(0, startFrom),
+      ...data.slice((length - startFrom) * -1),
+    ];
+  }
+  return data;
+};

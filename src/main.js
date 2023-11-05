@@ -11,9 +11,12 @@ import {
   logAsyncFunctionTime,
   pronounceCorrect,
   getRandomIndexes,
+  cutLongTermMemory,
 } from './utils.js';
 import TelegrafGA4 from 'telegraf-ga4';
 import { topics } from './topics.js';
+
+const ERROR_MESSAGE = 'Ooops. Please try again.';
 
 const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
 
@@ -61,18 +64,8 @@ const setChatGptSettings = async (ctx) => {
     });
   } catch (error) {
     console.error('setChatGptSettings: ', error.message);
+    await ctx.reply(ERROR_MESSAGE);
   }
-};
-
-const cutLongTermMemory = (data = [], length, startFrom) => {
-  const dataLength = data.length;
-  if (dataLength > length - startFrom) {
-    return [
-      ...data.slice(0, startFrom),
-      ...data.slice((length - startFrom) * -1),
-    ];
-  }
-  return data;
 };
 
 const getTopic = async (ctx) => {
@@ -113,6 +106,7 @@ const getTopic = async (ctx) => {
     );
   } catch (error) {
     console.error('getTopic: ', error.message);
+    await ctx.reply(ERROR_MESSAGE);
   }
 };
 
@@ -133,6 +127,7 @@ const initialization = async (ctx) => {
     );
   } catch (error) {
     console.error('initialization error: ', error.message);
+    await ctx.reply(ERROR_MESSAGE);
   }
 };
 
@@ -155,64 +150,29 @@ const selectTopic = async (ctx, index) => {
       response.content,
       ctx.session.settings.practiceLanguage,
     );
-    await ctx.replyWithVoice({ source });
+    await ctx.replyWithVoice(
+      { source },
+      Markup.keyboard([
+        [
+          Markup.button.callback(`🔤 Show text`, 'empty'),
+          Markup.button.callback(`🆘 Hint please`, 'showGrammarDetails'),
+        ],
+        [
+          Markup.button.callback(`🔄 Change topic`, 'changeTopics'),
+          Markup.button.callback(`🏁 Finish & feedback`, 'showGrammarDetails'),
+        ],
+      ]).resize(),
+    );
   } catch (error) {
     console.error('selectTopic: ', error.message);
+    await ctx.reply(ERROR_MESSAGE);
   }
 };
 
-bot.telegram.setMyCommands([
-  { command: '/start', description: 'Start' },
-  // { command: '/buy', description: 'Test buy' },
-]);
+bot.telegram.setMyCommands([{ command: '/start', description: 'Start' }]);
 
 bot.command('start', ga4.view('start'), async (ctx) => {
   await initialization(ctx);
-});
-
-const getInvoice = (id) => {
-  const invoice = {
-    chat_id: id, // Unique identifier of the target chat or username of the target channel
-    provider_token: config.get('STRIPE_PAYMENTS_TOKEN'), // token issued via bot @SberbankPaymentBot
-    start_parameter: 'get_access', // Unique parameter for deep links. If you leave this field blank, forwarded copies of the forwarded message will have a Pay button that allows multiple users to pay directly from the forwarded message using the same account. If not empty, redirected copies of the sent message will have a URL button with a deep link to the bot (instead of a payment button) with a value used as an initial parameter.
-    title: 'InvoiceTitle', // Product name, 1-32 characters
-    description: 'InvoiceDescription', // Product description, 1-255 characters
-    currency: 'PLN', // ISO 4217 Three-Letter Currency Code
-    prices: [{ label: 'Invoice Title', amount: 5 * 100 }], // Price breakdown, serialized list of components in JSON format 100 kopecks * 100 = 100 rubles
-    payload: 'payload',
-  };
-
-  return invoice;
-};
-
-bot.on('pre_checkout_query', (ctx) => ctx.answerPreCheckoutQuery(true)); // response to a preliminary request for payment
-
-bot.on('successful_payment', async (ctx, next) => {
-  // reply in case of positive payment
-  await ctx.reply('SuccessfulPayment');
-});
-
-bot.command('buy', async (ctx) => {
-  try {
-    await ctx.replyWithHTML(
-      "Cards for test pay <a href='https://stripe.com/docs/testing#cards'>here</a>",
-      { disable_web_page_preview: true },
-    );
-    await ctx.replyWithInvoice(getInvoice(ctx.from.id));
-  } catch (error) {
-    console.error('buy command: ', error.message);
-  }
-});
-
-bot.command('check', async (ctx) => {
-  try {
-    ctx.session.settings.grammarCheck = !ctx.session.settings.grammarCheck;
-    ctx.session.settings.grammarCheck
-      ? await ctx.reply('Grammar check activated')
-      : await ctx.reply('Grammar check disabled');
-  } catch (error) {
-    console.error('check command: ', error.message);
-  }
 });
 
 bot.action('changeTopics', ga4.view('topics change'), async (ctx) => {
@@ -253,6 +213,7 @@ bot.action('changeTopics', ga4.view('topics change'), async (ctx) => {
     );
   } catch (error) {
     console.error('changeTopics: ', error.message);
+    await ctx.reply(ERROR_MESSAGE);
   }
 });
 
@@ -261,6 +222,7 @@ bot.action('selectTopic0Handler', ga4.view('topic selected'), async (ctx) => {
     await selectTopic(ctx, 0);
   } catch (error) {
     console.error('selectTopic0Handler: ', error.message);
+    await ctx.reply(ERROR_MESSAGE);
   }
 });
 
@@ -269,6 +231,7 @@ bot.action('selectTopic1Handler', ga4.view('topic selected'), async (ctx) => {
     await selectTopic(ctx, 1);
   } catch (error) {
     console.error('selectTopic1Handler: ', error.message);
+    await ctx.reply(ERROR_MESSAGE);
   }
 });
 
@@ -277,6 +240,7 @@ bot.action('selectTopic2Handler', ga4.view('topic selected'), async (ctx) => {
     await selectTopic(ctx, 2);
   } catch (error) {
     console.error('selectTopic2Handler: ', error.message);
+    await ctx.reply(ERROR_MESSAGE);
   }
 });
 
@@ -285,6 +249,7 @@ bot.action('myOwnTopicHandler', ga4.view('topic own'), async (ctx) => {
     await ctx.editMessageText('What do you want to talk about?');
   } catch (error) {
     console.error('myOwnTopic: ', error.message);
+    await ctx.reply(ERROR_MESSAGE);
   }
 });
 
@@ -299,6 +264,7 @@ bot.action(
       await getTopic(ctx);
     } catch (error) {
       console.error('practiceAmericanEnglish: ', error.message);
+      await ctx.reply(ERROR_MESSAGE);
     }
   },
 );
@@ -314,6 +280,7 @@ bot.action(
       await getTopic(ctx);
     } catch (error) {
       console.error('practiceBritishEnglish: ', error.message);
+      await ctx.reply(ERROR_MESSAGE);
     }
   },
 );
@@ -336,7 +303,8 @@ bot.action(
         parse_mode: 'HTML',
       });
     } catch (error) {
-      console.error('practiceAmericanEnglish: ', error.message);
+      console.error('showGrammarDetails error: ', error.message);
+      await ctx.reply(ERROR_MESSAGE);
     }
   },
 );
@@ -365,40 +333,47 @@ bot.action(
         },
       );
     } catch (error) {
-      console.error('practiceAmericanEnglish: ', error.message);
+      console.error('showPronounceDetails error: ', error.message);
+      await ctx.reply(ERROR_MESSAGE);
     }
   },
 );
 
 bot.hears('🔤 Show text', ga4.view('show text'), async (ctx) => {
-  ctx.sendChatAction('typing');
-  ctx?.session?.lastResponse
-    ? await ctx.reply(ctx.session.lastResponse)
-    : ctx.reply('No text yet...');
+  try {
+    ctx.sendChatAction('typing');
+    await ctx.reply(ctx.session.lastResponse);
+  } catch (error) {
+    console.error('Show text error: ', error.message);
+    await ctx.reply(ERROR_MESSAGE);
+  }
 });
 
 bot.hears('🆘 Hint please', ga4.view('hint please'), async (ctx) => {
-  ctx.sendChatAction('typing');
-  const response =
-    ctx?.session?.lastResponse &&
-    (await logAsyncFunctionTime(
-      () =>
-        openAi.chat(
-          {
-            messages: [
-              {
-                role: openAi.roles.SYSTEM,
-                content: `Give 3 answers to this question, each in one short and simple sentence in basic level English. Use bullet list.`,
-              },
-              { role: openAi.roles.USER, content: ctx.session.lastResponse },
-            ],
-          }.messages,
-        ),
-      'openAi - hint',
-    ));
-  response?.content
-    ? await ctx.replyWithHTML(`<b>You can say:</b>\n${response.content}`)
-    : await ctx.reply('We have some issues. Please try again.');
+  try {
+    ctx.sendChatAction('typing');
+    const response =
+      ctx?.session?.lastResponse &&
+      (await logAsyncFunctionTime(
+        () =>
+          openAi.chat(
+            {
+              messages: [
+                {
+                  role: openAi.roles.SYSTEM,
+                  content: `Give 3 answers to this question, each in one short and simple sentence in basic level English. Use bullet list.`,
+                },
+                { role: openAi.roles.USER, content: ctx.session.lastResponse },
+              ],
+            }.messages,
+          ),
+        'openAi - hint',
+      ));
+    await ctx.replyWithHTML(`<b>You can say:</b>\n${response.content}`);
+  } catch (error) {
+    console.log('Hint error: ', error.message);
+    await ctx.reply(ERROR_MESSAGE);
+  }
 });
 
 bot.hears('🔄 Change topic', ga4.view('change topic'), async (ctx) => {
@@ -410,7 +385,8 @@ bot.hears('🔄 Change topic', ga4.view('change topic'), async (ctx) => {
     await setChatGptSettings(ctx);
     await getTopic(ctx);
   } catch (error) {
-    console.error('new command: ', error.message);
+    console.error('Change topic error:', error.message);
+    await ctx.reply(ERROR_MESSAGE);
   }
 });
 
@@ -418,22 +394,25 @@ bot.hears(
   '🏁 Finish & feedback',
   ga4.view('finish & feedback'),
   async (ctx) => {
-    ctx.reply('Some feedback');
+    try {
+      await ctx.reply('Some feedback');
+    } catch (error) {
+      console.error('finish & feedback error:', error.message);
+      await ctx.reply(ERROR_MESSAGE);
+    }
   },
 );
 
 bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
+  let globalResponse;
   try {
     ctx.sendChatAction('typing');
     if (!ctx.session.settings) {
       return initialization(ctx);
     }
-    const link =
-      ctx?.message?.voice?.file_id &&
-      (await ctx.telegram.getFileLink(ctx.message.voice.file_id));
+    const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id);
     const userId = ctx?.message?.from?.id && ctx.message.from.id;
-    const oggPath =
-      link?.href && userId && (await ogg.create(link.href, userId));
+    const oggPath = await ogg.create(link.href, userId);
     const [mp3Path, wavPath] =
       oggPath &&
       userId &&
@@ -452,6 +431,7 @@ bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
     text = /[A-Za-z]$/.test(text) ? text + '.' : text;
     ctx.session.messages = cutLongTermMemory(ctx.session.messages, 11, 2);
     ctx.session.messages.push({ role: openAi.roles.USER, content: text });
+    ctx.sendChatAction('typing');
     const [
       {
         pronounceScore,
@@ -486,6 +466,7 @@ bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
         'openAi - make answer',
       ),
     ]);
+    globalResponse = response;
     ctx.sendChatAction('typing');
     const corrected =
       grammar?.content?.match(/.*"([^"]+)"/)[0].slice(1, -1) || '';
@@ -501,6 +482,7 @@ bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
       pronounceText,
       pronounceWords,
     );
+    ctx.sendChatAction('typing');
     ctx.session?.lastCheckMessage?.message_id &&
       (await ctx.telegram.editMessageText(
         ctx.chat.id,
@@ -510,11 +492,8 @@ bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
         { entities: ctx.session.lastCheckMessage.entities },
       ));
     ctx.session.lastCheckMessage = {};
-    // ctx.sendChatAction('typing');
     ctx.session.lastCheckMessage = await ctx.replyWithHTML(
-      `<b>Your message:</b>\n${
-        text || 'Something bad happened, send the message again please.'
-      }`,
+      `<b>Your message:</b>\n${text}`,
       Markup.inlineKeyboard([
         [
           Markup.button.callback(
@@ -528,44 +507,33 @@ bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
         ],
       ]).resize(),
     );
+  } catch (error) {
+    console.error('check user message error: ', error.message);
+    await ctx.reply(ERROR_MESSAGE);
+  }
+
+  try {
     ctx.sendChatAction('record_voice');
     ctx.session.messages.push({
       role: openAi.roles.ASSISTANT,
-      content: response.content,
+      content: globalResponse.content,
     });
-    const source =
-      response?.content &&
-      (await logAsyncFunctionTime(
-        () =>
-          textConverter.textToSpeech(
-            `${response.content || ''}`,
-            ctx.session.settings.practiceLanguage,
-          ),
-        'google - text to speech',
-      ));
-    ctx.session.lastResponse = response?.content || '';
-    source &&
-      (await ctx.replyWithVoice(
-        { source },
-        Markup.keyboard([
-          [
-            Markup.button.callback(`🔤 Show text`, 'empty'),
-            Markup.button.callback(`🆘 Hint please`, 'showGrammarDetails'),
-          ],
-          [
-            Markup.button.callback(`🔄 Change topic`, 'changeTopics'),
-            Markup.button.callback(
-              `🏁 Finish & feedback`,
-              'showGrammarDetails',
-            ),
-          ],
-        ]).resize(),
-      ));
+    const source = await logAsyncFunctionTime(
+      () =>
+        textConverter.textToSpeech(
+          `${globalResponse.content || ''}`,
+          ctx.session.settings.practiceLanguage,
+        ),
+      'google - text to speech',
+    );
+    ctx.session.lastResponse = globalResponse.content;
+    await ctx.replyWithVoice({ source });
     console.log(
       '=============================================================================',
     );
   } catch (error) {
-    console.error('get voice: ', error.message);
+    console.error('make audio error: ', error.message);
+    await ctx.reply(ERROR_MESSAGE);
   }
 });
 
@@ -592,6 +560,7 @@ bot.on(message('text'), ga4.view('user text message'), async (ctx, next) => {
     await ctx.reply('Please record audio, text message is temporarily off');
   } catch (error) {
     console.error('get text: ', error.message);
+    await ctx.reply(ERROR_MESSAGE);
   }
 });
 

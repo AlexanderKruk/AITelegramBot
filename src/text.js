@@ -4,6 +4,9 @@ import { readFileSync } from 'fs';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
 import config from 'config';
+import fs from 'fs';
+import path from 'path';
+import OpenAIApi from 'openai';
 
 class TextConverter {
   pathToKey =
@@ -40,61 +43,15 @@ class TextConverter {
 
   async textToSpeech(text, language) {
     try {
-      const url =
-        'https://us-central1-texttospeech.googleapis.com/v1beta1/text:synthesize';
-
-      const calculateVoice = (language) => {
-        switch (language) {
-          case 'british': {
-            return {
-              languageCode: 'en-GB',
-              name: 'en-GB-Neural2-A',
-            };
-          }
-          case 'american': {
-            return {
-              languageCode: 'en-US',
-              name: 'en-US-Neural2-F',
-            };
-          }
-          case 'Polish': {
-            return {
-              languageCode: 'pl-PL',
-              name: 'pl-PL-Standard-E',
-            };
-          }
-          default: {
-            return {
-              languageCode: 'en-GB',
-              name: 'en-GB-Neural2-C',
-            };
-          }
-        }
-      };
-
-      const data = {
-        audioConfig: {
-          audioEncoding: 'OGG_OPUS',
-          effectsProfileId: ['handset-class-device'],
-          pitch: 0,
-          speakingRate: 1,
-        },
-        input: { text },
-        voice: calculateVoice(language),
-      };
-
-      const accessToken = await this.getToken();
-
-      const response = await axios({
-        url,
-        method: 'POST',
-        data,
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
+      const openai = new OpenAIApi({ apiKey: config.get('OPENAI_KEY') });
+      const speechFile = path.resolve('./speech.mp3');
+      const mp3 = await openai.audio.speech.create({
+        model: 'tts-1',
+        voice: 'alloy',
+        input: text,
+        response_format: 'opus',
       });
-      return Buffer.from(response.data.audioContent, 'base64');
+      return Buffer.from(await mp3.arrayBuffer());
     } catch (error) {
       console.log('textToSpeech error', error.message);
     }

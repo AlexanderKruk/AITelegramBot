@@ -419,23 +419,17 @@ bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
       return initialization(ctx);
     }
     const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id);
-    const userId = ctx?.message?.from?.id && ctx.message.from.id;
+    const userId = ctx?.message?.from?.id;
     const oggPath = await ogg.create(link.href, userId);
-    const [mp3Path, wavPath] =
-      oggPath &&
-      userId &&
-      (await Promise.all([
-        ogg.toMp3(oggPath, userId),
-        ogg.toWav(oggPath, userId),
-      ]));
-    let text =
-      mp3Path &&
-      ctx?.session?.settings?.practiceLanguage &&
-      (await logAsyncFunctionTime(
-        () =>
-          openAi.transcription(mp3Path, ctx.session.settings.practiceLanguage),
-        'openAi - transcript audio',
-      ));
+    const [mp3Path, wavPath] = await Promise.all([
+      ogg.toMp3(oggPath, userId),
+      ogg.toWav(oggPath, userId),
+    ]);
+    let text = await logAsyncFunctionTime(
+      () =>
+        openAi.transcription(mp3Path, ctx.session.settings.practiceLanguage),
+      'openAi - transcript audio',
+    );
     text = /[A-Za-z]$/.test(text) ? text + '.' : text;
     ctx.session.messages = cutLongTermMemory(ctx.session.messages, 11, 2);
     ctx.session.messages.push({ role: openAi.roles.USER, content: text });

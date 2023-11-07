@@ -30,8 +30,8 @@
     "diff": "^5.1.0",
     "fluent-ffmpeg": "^2.1.2",
     "jsonwebtoken": "^9.0.2",
-    "microsoft-cognitiveservices-speech-sdk": "^1.32.0",
-    "openai": "^3.2.1",
+    "microsoft-cognitiveservices-speech-sdk": "1.32.0",
+    "openai": "^4.16.1",
     "telegraf": "^4.13.1",
     "telegraf-ga4": "https://github.com/rezox1/telegraf-ga4.git",
     "telegraf-session-redis-upd": "^5.1.4"

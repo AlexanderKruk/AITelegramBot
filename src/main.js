@@ -273,7 +273,7 @@ bot.action(
         ...Markup.inlineKeyboard([
           [
             Markup.button.callback(
-              `👄 ${ctx.session.pronounce.pronounceScore}%`,
+              `🎙 ${ctx.session.pronounce.pronounceScore}%`,
               'showPronounceDetails',
             ),
             Markup.button.callback(`✏️ ${ctx.session.grammarScore}%`, 'empty'),
@@ -299,7 +299,7 @@ bot.action(
           ...Markup.inlineKeyboard([
             [
               Markup.button.callback(
-                `👄 ${ctx.session.pronounce.pronounceScore}%`,
+                `🎙 ${ctx.session.pronounce.pronounceScore}%`,
                 'empty',
               ),
               Markup.button.callback(
@@ -380,7 +380,6 @@ bot.hears(
           userText += ` ${message.content}`;
         }
       }
-      console.log('length', userText.length);
       if (userText.length > 300) {
         const response = await logAsyncFunctionTime(
           () =>
@@ -521,7 +520,7 @@ bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
       Markup.inlineKeyboard([
         [
           Markup.button.callback(
-            `👄 ${ctx.session?.pronounce?.pronounceScore || '-'}%`,
+            `🎙 ${ctx.session?.pronounce?.pronounceScore || '-'}%`,
             'showPronounceDetails',
           ),
           Markup.button.callback(

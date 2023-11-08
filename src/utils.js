@@ -33,7 +33,7 @@ export function pronounceCorrect(pronounceText = '', pronounceWords = []) {
   const returnWords = pronounceText.split(' ');
   let correctResult = '';
   for (const [index, word] of pronounceWords.entries()) {
-    if (word.PronunciationAssessment.AccuracyScore < 90) {
+    if (word.PronunciationAssessment.AccuracyScore < 80) {
       correctResult += `<u>${returnWords[index]}</u> `;
     } else {
       correctResult += `${returnWords[index]} `;
@@ -79,3 +79,6 @@ export const cutLongTermMemory = (data = [], length, startFrom) => {
   }
   return data;
 };
+
+export const average = (arr = []) =>
+  Math.round(arr.reduce((p, c) => p + c, 0) / arr.length);

@@ -13,11 +13,12 @@ class OpenAI {
     this.openai = new OpenAIApi({ apiKey });
   }
 
-  async chat(messages) {
+  async chat(messages, model = 'gpt-3.5-turbo-1106', type = 'text') {
     try {
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo-1106',
+        model,
         messages,
+        response_format: { type },
       });
       return response.choices[0].message;
     } catch (error) {

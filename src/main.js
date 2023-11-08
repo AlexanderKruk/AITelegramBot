@@ -407,15 +407,15 @@ bot.hears(
         const averagePronunciationScore = average(ctx.session.pronounseScores);
         const averageGrammarScore = average(ctx.session.grammarScores);
         await ctx.replyWithHTML(
-          `<b>Language level:</b> ${
+          `<b>📊 Language level:</b> ${
             ctx.session.feedback.CEFR
-          }\n<b>Grammar:</b> ${
+          }\n<b>✏️ Grammar:</b> ${
             averageGrammarScore || '-'
-          }%\n<b>Pronunciation:</b> ${
+          }%\n<b>🎙 Pronunciation:</b> ${
             averagePronunciationScore || '-'
-          }%\n\n<b>Already good:</b> ${
+          }%\n\n<b>👍 Already good:</b> ${
             ctx.session.feedback.Good
-          }\n\n<b>Can be improved:</b> ${ctx.session.feedback.Improve}`,
+          }\n\n<b>👉 Can be improved:</b> ${ctx.session.feedback.Improve}`,
           Markup.inlineKeyboard([
             [Markup.button.callback(`🌟 Start new lesson`, 'startNewLesson')],
           ]).resize(),

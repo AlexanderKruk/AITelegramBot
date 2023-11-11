@@ -61,7 +61,7 @@ const setChatGptSettings = async (ctx) => {
     ctx.session = structuredClone(INITIAL_SESSION);
     ctx.session.messages.push({
       role: openAi.roles.SYSTEM,
-      content: `Act as an English language teacher and my best friend. Let's practice some dialogues. Answer in the English language, with a maximum of 2 sentences. Ask a question at the end. Please write in emotional tone, English language.`,
+      content: `Act as an English language teacher and my best friend. Let's practice some dialogues. Answer in the English language, with a maximum of 2 sentences. Ask a question at the end. Please write in emotional tone.`,
     });
   } catch (error) {
     console.error('setChatGptSettings: ', error.message);
@@ -71,7 +71,7 @@ const setChatGptSettings = async (ctx) => {
 
 const getTopic = async (ctx) => {
   try {
-    const topicIndexes = getRandomIndexes(109, 3);
+    const topicIndexes = getRandomIndexes(130, 3);
     if (ctx?.session?.settings?.topics) {
       ctx.session.settings.topics = [];
       for (const index of topicIndexes) {
@@ -357,10 +357,6 @@ bot.hears('🆘 Hint please', ga4.view('hint please'), async (ctx) => {
 
 bot.hears('🔄 Change topic', ga4.view('change topic'), async (ctx) => {
   try {
-    ctx.session = {
-      ...structuredClone(INITIAL_SESSION),
-      settings: ctx?.session?.settings || settings,
-    };
     // await setChatGptSettings(ctx);
     await getTopic(ctx);
   } catch (error) {

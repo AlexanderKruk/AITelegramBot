@@ -36,8 +36,8 @@ class Pronounce {
       pronunciationAssessmentConfig.applyTo(reco);
 
       function onRecognizedResult(result) {
-        // console.log("pronunciation assessment for: ", reference_text);
-        // console.log("pronunciation assessment for: ", result.text);
+        // console.log('pronunciation assessment for: ', reference_text);
+        // console.log('pronunciation assessment for: ', result.text);
         var pronunciation_result =
           sdk.PronunciationAssessmentResult.fromResult(result);
         // console.log(" Accuracy score: ", pronunciation_result.accuracyScore, '\n',
@@ -49,10 +49,25 @@ class Pronounce {
         var prosodyScore =
           pronunciation_result.privPronJson.PronunciationAssessment
             .ProsodyScore;
-        // console.log('MyPronScore', pronunciation_result.accuracyScore * 0.5 + prosodyScore * 0.2 + pronunciation_result.fluencyScore * 0.3)
-        // console.log("  Word-level details:");
-        // pronunciation_result.detailResult.Words.forEach( (word, idx) => {
-        //     console.log("    ", idx + 1, ": word: ", word.Word, "\taccuracy score: ", word.PronunciationAssessment.AccuracyScore, "\terror type: ", word.PronunciationAssessment.ErrorType, ";");
+        // console.log(
+        //   'MyPronScore',
+        //   pronunciation_result.accuracyScore * 0.5 +
+        //     prosodyScore * 0.2 +
+        //     pronunciation_result.fluencyScore * 0.3,
+        // );
+        // console.log('  Word-level details:');
+        // pronunciation_result.detailResult.Words.forEach((word, idx) => {
+        //   console.log(
+        //     '    ',
+        //     idx + 1,
+        //     ': word: ',
+        //     word.Word,
+        //     '\taccuracy score: ',
+        //     word.PronunciationAssessment.AccuracyScore,
+        //     '\terror type: ',
+        //     word.PronunciationAssessment.ErrorType,
+        //     ';',
+        //   );
         // });
         reco.close();
         const pronounceScore = Math.round(

@@ -54,6 +54,8 @@ const INITIAL_SESSION = {
   lastResponse: '',
   pronounseScores: [],
   grammarScores: [],
+  averagePronunciationScore: 0,
+  averageGrammarScore: 0,
 };
 
 const setChatGptSettings = async (ctx) => {
@@ -252,10 +254,25 @@ bot.action('myOwnTopicHandler', ga4.view('topic own'), async (ctx) => {
 
 bot.action('startNewLesson', ga4.view('start new lesson'), async (ctx) => {
   try {
-    ctx.editMessageText(`Test`, {
-      ...Markup.inlineKeyboard([[]]),
-      parse_mode: 'HTML',
-    });
+    ctx.editMessageText(
+      `<b>📊 Language level:</b> ${
+        ctx.session.feedback.CEFR
+      }\n<b>✏️ Grammar:</b> ${
+        ctx.session.averageGrammarScore || '-'
+      }%\n<b>🎙 Pronunciation:</b> ${
+        ctx.session.averagePronunciationScore || '-'
+      }%\n\n<b>👍 Already good:</b>\n${
+        ctx.session.feedback.Good
+      }\n\n<b>👉 Can be improved:</b>\n${
+        ctx.session.feedback.Improve
+      }\n\n<b>Grammar issues:</b>\n${ctx.session.feedback.Mistakes.map(
+        (mistake) => `🔸 ${mistake}`,
+      ).join('\n')}`,
+      {
+        ...Markup.inlineKeyboard([[]]),
+        parse_mode: 'HTML',
+      },
+    );
     await setChatGptSettings(ctx);
     await getTopic(ctx);
   } catch (error) {
@@ -384,11 +401,12 @@ bot.hears(
                 messages: [
                   {
                     role: openAi.roles.USER,
-                    content: `Rate the language level of my speech: "${userText}".
-                    JSON fileds:
+                    content: `My speech: "${userText}".
+                    JSON fields:
                     "CEFR" : Cefr level of my speech,
-                    "Good":  Two simple sentences about current grammar and vocabulary in my speech,
-                    "Improve": Two simple sentences about what can be improved in grammar and vocabulary in my speech
+                    "Good":  I need an advice two sentences about current grammar and vocabulary in my speech. Format string,
+                    "Improve": I need an advice two sentences about what can be improved in grammar and vocabulary in my speech. Format string,
+                    "Mistakes":  Write why my grammar is being corrected, no more than three grammar errors. Format an array of strings, one string per mistake.
                     `,
                   },
                 ],
@@ -400,18 +418,24 @@ bot.hears(
           'openAi - feedback',
         );
         ctx.session.feedback = JSON.parse(response.content);
-        const averagePronunciationScore = average(ctx.session.pronounseScores);
-        const averageGrammarScore = average(ctx.session.grammarScores);
+        ctx.session.averagePronunciationScore = average(
+          ctx.session.pronounseScores,
+        );
+        ctx.session.averageGrammarScore = average(ctx.session.grammarScores);
         await ctx.replyWithHTML(
           `<b>📊 Language level:</b> ${
             ctx.session.feedback.CEFR
           }\n<b>✏️ Grammar:</b> ${
-            averageGrammarScore || '-'
+            ctx.session.averageGrammarScore || '-'
           }%\n<b>🎙 Pronunciation:</b> ${
-            averagePronunciationScore || '-'
-          }%\n\n<b>👍 Already good:</b> ${
+            ctx.session.averagePronunciationScore || '-'
+          }%\n\n<b>👍 Already good:</b>\n${
             ctx.session.feedback.Good
-          }\n\n<b>👉 Can be improved:</b> ${ctx.session.feedback.Improve}`,
+          }\n\n<b>👉 Can be improved:</b>\n${
+            ctx.session.feedback.Improve
+          }\n\n<b>Grammar issues:</b>\n${ctx.session.feedback.Mistakes.map(
+            (mistake) => `🔸 ${mistake}`,
+          ).join('\n')}`,
           Markup.inlineKeyboard([
             [Markup.button.callback(`🌟 Start new lesson`, 'startNewLesson')],
           ]).resize(),

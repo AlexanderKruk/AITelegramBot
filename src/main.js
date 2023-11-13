@@ -600,7 +600,7 @@ bot.on(message('text'), ga4.view('user text message'), async (ctx, next) => {
     // ctx.session.messages.push({ role: openAi.roles.ASSISTANT, content: response.content })
     // const source = await textConverter.textToSpeech(response.content, ctx.session.settings.practiceLanguage)
     // await ctx.replyWithVoice({ source }, { caption: response.content })
-    await ctx.reply('Please send voice message');
+    await ctx.reply('Please send a voice 🎙 message');
   } catch (error) {
     console.error('get text: ', error.message);
     await ctx.reply(ERROR_MESSAGE);

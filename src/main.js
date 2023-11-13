@@ -116,7 +116,7 @@ const getTopic = async (ctx) => {
 const initialization = async (ctx) => {
   try {
     await ctx.reply(
-      `Hi 👋, nice to meet you 😊. \nI will help you to practise and improve your English conversation skills.\nPlease send me a voice🎙 messages.`,
+      `Hi 👋, nice to meet you 😊.\nI will help you practice and improve your English conversation skills.`,
     );
     await setChatGptSettings(ctx);
     await getTopic(ctx);
@@ -601,22 +601,7 @@ bot.on(message('text'), ga4.view('user text message'), async (ctx, next) => {
     if (!ctx.session.settings) {
       return initialization(ctx);
     }
-    // ctx.sendChatAction('record_voice');
-    // const { grammarCheck } = ctx.session.settings;
-    // const grammar = grammarCheck ? await openAi.chat({
-    //   messages: [
-    //     { role: openAi.roles.SYSTEM, content: `It is ${ctx.session.settings.practiceLanguage}. Correct my spelling and grammar. Return text in quotes. Text: "${ctx.message.text}"` }]
-    // }.messages) : null;
-    // const corrected = grammar.content.match(/.*"([^"]+)"/)[0].slice(1, -1);
-    // const diffText = await diff(ctx.message.text, corrected)
-    // grammarCheck && corrected.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"") !== ctx.message.text.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"") ? await ctx.replyWithHTML(`Correct: ${diffText}`) : null;
-    // ctx.session.messages = cutLongTermMemory(ctx.session.messages, 11, 2);
-    // ctx.session.messages.push({ role: openAi.roles.USER, content: ctx.message.text })
-    // const response = await openAi.chat(ctx.session.messages);
-    // ctx.session.messages.push({ role: openAi.roles.ASSISTANT, content: response.content })
-    // const source = await textConverter.textToSpeech(response.content, ctx.session.settings.practiceLanguage)
-    // await ctx.replyWithVoice({ source }, { caption: response.content })
-    await ctx.reply('Please send a voice 🎙 message');
+    await ctx.reply('Please send me a voice 🎙 message.');
   } catch (error) {
     console.error('get text: ', error.message);
     await ctx.reply(ERROR_MESSAGE);

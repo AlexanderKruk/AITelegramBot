@@ -22,9 +22,9 @@ class Pronounce {
       const pronunciationAssessmentConfig =
         new sdk.PronunciationAssessmentConfig.fromJSON(
           '{"GradingSystem": "HundredMark", \
-              "Granularity": "Phoneme", \
-              "EnableMiscue": "True", \
-              "EnableProsodyAssessment": "True"}',
+              "Granularity": "Word", \
+              "EnableMiscue": "False", \
+              "EnableProsodyAssessment": "False"}',
         );
       pronunciationAssessmentConfig.referenceText = reference_text;
 
@@ -71,10 +71,9 @@ class Pronounce {
         // });
         reco.close();
         const pronounceScore = Math.round(
-          pronunciation_result.accuracyScore * 0.5 +
+          pronunciation_result.accuracyScore * 0.6 +
             pronunciation_result.fluencyScore * 0.2 +
-            pronunciation_result.completenessScore * 0.2 +
-            prosodyScore * 0.1,
+            pronunciation_result.completenessScore * 0.2,
         );
         return {
           pronounceScore,

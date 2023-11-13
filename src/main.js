@@ -153,12 +153,12 @@ const selectTopic = async (ctx, index) => {
       { source },
       Markup.keyboard([
         [
-          Markup.button.callback(`🔤 Show text`, 'empty'),
-          Markup.button.callback(`🆘 Hint please`, 'showGrammarDetails'),
+          Markup.button.callback(`🔤 Show text`),
+          Markup.button.callback(`🆘 Hint please`),
         ],
         [
-          Markup.button.callback(`🔄 Change topic`, 'changeTopics'),
-          Markup.button.callback(`🏁 Finish & feedback`, 'showGrammarDetails'),
+          Markup.button.callback(`🔄 Change topic`),
+          Markup.button.callback(`🏁 Finish & feedback`),
         ],
       ]).resize(),
     );
@@ -574,7 +574,19 @@ bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
       'openAi - text to speech',
     );
     ctx.session.lastResponse = globalResponse.content;
-    await ctx.replyWithVoice({ source });
+    await ctx.replyWithVoice(
+      { source },
+      Markup.keyboard([
+        [
+          Markup.button.callback(`🔤 Show text`),
+          Markup.button.callback(`🆘 Hint please`),
+        ],
+        [
+          Markup.button.callback(`🔄 Change topic`),
+          Markup.button.callback(`🏁 Finish & feedback`),
+        ],
+      ]).resize(),
+    );
     console.log(
       '=============================================================================',
     );

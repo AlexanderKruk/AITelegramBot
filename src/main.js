@@ -81,7 +81,7 @@ const getTopic = async (ctx) => {
       }
     }
     await ctx.reply(
-      'What do you want to talk about? Select a topic:',
+      'What do you want to talk about?',
       Markup.inlineKeyboard([
         [
           Markup.button.callback(
@@ -102,7 +102,7 @@ const getTopic = async (ctx) => {
           ),
         ],
         [
-          Markup.button.callback("✏️ Let's talk about...", 'myOwnTopicHandler'),
+          Markup.button.callback('💭 My own topic', 'myOwnTopicHandler'),
           Markup.button.callback('🔄 Change topics', 'changeTopics'),
         ],
       ]),
@@ -205,7 +205,7 @@ bot.action('changeTopics', ga4.view('topics change'), async (ctx) => {
           ),
         ],
         [
-          Markup.button.callback('✏️ My own topic', 'practiceLanguageGerman'),
+          Markup.button.callback('💭 My own topic', 'myOwnTopicHandler'),
           Markup.button.callback('🔄 Change topics', 'changeTopics'),
         ],
       ]),
@@ -246,6 +246,10 @@ bot.action('selectTopic2Handler', ga4.view('topic selected'), async (ctx) => {
 bot.action('myOwnTopicHandler', ga4.view('topic own'), async (ctx) => {
   try {
     await ctx.editMessageText('What do you want to talk about?');
+    ctx.session.messages.push({
+      role: openAi.roles.ASSISTANT,
+      content: 'What do you want to talk about? Select a topic:',
+    });
   } catch (error) {
     console.error('myOwnTopic: ', error.message);
     await ctx.reply(ERROR_MESSAGE);
@@ -609,6 +613,7 @@ bot.on(message('text'), ga4.view('user text message'), async (ctx, next) => {
 
 bot.catch((err, ctx) => {
   console.log(`Ooops, encountered an error for ${ctx.updateType}`, err);
+  ctx.reply(ERROR_MESSAGE);
 });
 
 bot.launch();

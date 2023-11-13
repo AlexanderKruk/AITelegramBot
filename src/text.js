@@ -8,7 +8,7 @@ class TextConverter {
       const openai = new OpenAIApi({ apiKey: config.get('OPENAI_KEY') });
       const mp3 = await openai.audio.speech.create({
         model: 'tts-1',
-        voice: 'alloy',
+        voice: 'nova',
         input: text,
         response_format: 'opus',
       });

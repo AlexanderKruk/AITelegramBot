@@ -116,7 +116,7 @@ const getTopic = async (ctx) => {
 const initialization = async (ctx) => {
   try {
     await ctx.reply(
-      `Hi 👋, nice to meet you. \nI will help you practice your English conversation skills.\nYou can send voice 🎙 or text 💬 messages.`,
+      `Hi 👋, nice to meet you 😊. \nI will help you to practise and improve your English conversation skills.\nPlease send me a voice🎙 messages.`,
     );
     await setChatGptSettings(ctx);
     await getTopic(ctx);
@@ -600,7 +600,7 @@ bot.on(message('text'), ga4.view('user text message'), async (ctx, next) => {
     // ctx.session.messages.push({ role: openAi.roles.ASSISTANT, content: response.content })
     // const source = await textConverter.textToSpeech(response.content, ctx.session.settings.practiceLanguage)
     // await ctx.replyWithVoice({ source }, { caption: response.content })
-    await ctx.reply('Please record audio, text message is temporarily off');
+    await ctx.reply('Please send voice message');
   } catch (error) {
     console.error('get text: ', error.message);
     await ctx.reply(ERROR_MESSAGE);

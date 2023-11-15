@@ -80,9 +80,8 @@ const getTopic = async (ctx) => {
         ctx.session.settings.topics.push(topics[index]);
       }
     }
-    await ctx.reply(
-      'What do you want to talk about?',
-      Markup.inlineKeyboard([
+    await ctx.reply('What do you want to talk about?             &#x200D;', {
+      ...Markup.inlineKeyboard([
         [
           Markup.button.callback(
             ctx.session.settings.topics[0],
@@ -106,7 +105,8 @@ const getTopic = async (ctx) => {
           Markup.button.callback('🔄 Change topics', 'changeTopics'),
         ],
       ]),
-    );
+      parse_mode: 'HTML',
+    });
   } catch (error) {
     console.error('getTopic: ', error.message);
     await ctx.reply(ERROR_MESSAGE);
@@ -184,31 +184,34 @@ bot.action('changeTopics', ga4.view('topics change'), async (ctx) => {
       }
     }
     await ctx.editMessageText(
-      'What do you want to talk about?',
-      Markup.inlineKeyboard([
-        [
-          Markup.button.callback(
-            ctx.session.settings.topics[0],
-            'selectTopic0Handler',
-          ),
-        ],
-        [
-          Markup.button.callback(
-            ctx.session.settings.topics[1],
-            'selectTopic1Handler',
-          ),
-        ],
-        [
-          Markup.button.callback(
-            ctx.session.settings.topics[2],
-            'selectTopic2Handler',
-          ),
-        ],
-        [
-          Markup.button.callback('💭 My own topic', 'myOwnTopicHandler'),
-          Markup.button.callback('🔄 Change topics', 'changeTopics'),
-        ],
-      ]),
+      'What do you want to talk about?             &#x200D;',
+      {
+        ...Markup.inlineKeyboard([
+          [
+            Markup.button.callback(
+              ctx.session.settings.topics[0],
+              'selectTopic0Handler',
+            ),
+          ],
+          [
+            Markup.button.callback(
+              ctx.session.settings.topics[1],
+              'selectTopic1Handler',
+            ),
+          ],
+          [
+            Markup.button.callback(
+              ctx.session.settings.topics[2],
+              'selectTopic2Handler',
+            ),
+          ],
+          [
+            Markup.button.callback('💭 My own topic', 'myOwnTopicHandler'),
+            Markup.button.callback('🔄 Change topics', 'changeTopics'),
+          ],
+        ]),
+        parse_mode: 'HTML',
+      },
     );
   } catch (error) {
     console.error('changeTopics: ', error.message);
@@ -461,6 +464,14 @@ bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
     if (!ctx.session.settings) {
       return initialization(ctx);
     }
+    ctx.session?.lastCheckMessage?.message_id &&
+      (await ctx.telegram.editMessageText(
+        ctx.chat.id,
+        ctx.session.lastCheckMessage.message_id,
+        0,
+        ctx.session.lastCheckMessage.text,
+        { entities: ctx.session.lastCheckMessage.entities },
+      ));
     const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id);
     const userId = ctx?.message?.from?.id;
     const oggPath = await ogg.create(link.href, userId);
@@ -530,14 +541,6 @@ bot.on(message('voice'), ga4.view('user voice message'), async (ctx) => {
       pronounceWords,
     );
     ctx.sendChatAction('typing');
-    ctx.session?.lastCheckMessage?.message_id &&
-      (await ctx.telegram.editMessageText(
-        ctx.chat.id,
-        ctx.session.lastCheckMessage.message_id,
-        0,
-        ctx.session.lastCheckMessage.text,
-        { entities: ctx.session.lastCheckMessage.entities },
-      ));
     ctx.session.lastCheckMessage = {};
     ctx.session.lastCheckMessage = await ctx.replyWithHTML(
       `<b>Your message:</b>\n${text}`,
@@ -610,7 +613,6 @@ bot.on(message('text'), ga4.view('user text message'), async (ctx, next) => {
 
 bot.catch((err, ctx) => {
   console.log(`Ooops, encountered an error for ${ctx.updateType}`, err);
-  ctx.reply(ERROR_MESSAGE);
 });
 
 bot.launch();

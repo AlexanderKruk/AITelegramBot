@@ -8,6 +8,7 @@ import { Markup } from 'telegraf';
 
 export default async (ctx) => {
   let globalResponse;
+  let isError = false;
   try {
     ctx.sendChatAction('typing');
     ctx.session?.lastCheckMessage?.message_id &&
@@ -87,6 +88,7 @@ export default async (ctx) => {
       ]).resize(),
     );
   } catch (error) {
+    isError = true;
     console.error('check user message error: ', error.message);
     await ctx.reply(ERROR_MESSAGE);
   }
@@ -116,6 +118,6 @@ export default async (ctx) => {
     console.log('=============================================================================');
   } catch (error) {
     console.error('make audio error: ', error.message);
-    await ctx.reply(ERROR_MESSAGE);
+    !isError && (await ctx.reply(ERROR_MESSAGE));
   }
 };

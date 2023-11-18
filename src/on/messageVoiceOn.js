@@ -1,4 +1,3 @@
-import initialization from '../actions/initializationAction.js';
 import { ERROR_MESSAGE } from '../constants.js';
 import { openAi } from '../services/openAiService.js';
 import { ogg } from '../services/audioConverterService.js';
@@ -11,9 +10,6 @@ export default async (ctx) => {
   let globalResponse;
   try {
     ctx.sendChatAction('typing');
-    if (!ctx.session.settings) {
-      return initialization(ctx);
-    }
     ctx.session?.lastCheckMessage?.message_id &&
       (await ctx.telegram.editMessageText(
         ctx.chat.id,

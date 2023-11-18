@@ -4,7 +4,7 @@ import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import ffmpeg from 'fluent-ffmpeg';
 import installer from '@ffmpeg-installer/ffmpeg';
-import { removeFile } from './utils.js';
+import { removeFile } from '../utils/utils.js';
 
 export const __dirname = dirname(fileURLToPath(import.meta.url));
 

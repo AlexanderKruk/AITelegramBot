@@ -46,9 +46,9 @@ class Pronounce {
         //   "fluency score: ", pronunciation_result.fluencyScore, '\n',
         //   "propsody score", pronunciation_result.privPronJson.PronunciationAssessment.ProsodyScore,
         // );
-        var prosodyScore =
-          pronunciation_result.privPronJson.PronunciationAssessment
-            .ProsodyScore;
+        // var prosodyScore =
+        //   pronunciation_result.privPronJson.PronunciationAssessment
+        //     .ProsodyScore;
         // console.log(
         //   'MyPronScore',
         //   pronunciation_result.accuracyScore * 0.5 +
@@ -75,6 +75,7 @@ class Pronounce {
             pronunciation_result.fluencyScore * 0.2 +
             pronunciation_result.completenessScore * 0.2,
         );
+
         return {
           pronounceScore,
           pronounceText: result.text,
@@ -84,9 +85,10 @@ class Pronounce {
         };
       }
 
-      reco.recognizeOnceAsync(function (successfulResult) {
-        onRecognizedResult(successfulResult);
-      });
+      // reco.recognizeOnceAsync(function (successfulResult) {
+      //   onRecognizedResult(successfulResult);
+      // });
+
       return new Promise((resolve, reject) => {
         reco.recognizeOnceAsync(
           (successfulResult) => resolve(onRecognizedResult(successfulResult)),

@@ -1,4 +1,4 @@
-import { __dirname } from './ogg.js';
+import { __dirname } from './audioConverterService.js';
 import config from 'config';
 import OpenAIApi from 'openai';
 

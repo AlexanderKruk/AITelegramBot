@@ -1,3 +1,26 @@
+const settings = {
+  grammarCheck: true,
+  practiceLanguage: 'English',
+  languageLevel: 'Intermediate',
+  topics: [],
+  selectedTopic: '',
+};
+
+export const INITIAL_SESSION = {
+  messages: [],
+  settings,
+  lastCheckMessage: {},
+  diffText: '',
+  pronounce: {},
+  lastResponse: '',
+  pronounseScores: [],
+  grammarScores: [],
+  averagePronunciationScore: 0,
+  averageGrammarScore: 0,
+};
+
+export const ERROR_MESSAGE = 'Ooops. Please try again or /start.';
+
 export const topics = [
   '🤖 Future of AI',
   '🌍 Climate change',

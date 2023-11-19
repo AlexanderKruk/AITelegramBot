@@ -7,13 +7,12 @@ const selectTopic = async (ctx, index) => {
     ctx.sendChatAction('record_voice');
     ctx.session.settings.selectedTopic = ctx.session.settings.topics[index];
     ctx?.session?.settings?.selectedTopic &&
-      ctx.editMessageText(
-        `<b>Topic:</b> ${ctx.session.settings.selectedTopic}`,
-        { parse_mode: 'HTML' },
-      );
+      ctx.editMessageText(`<b>Topic:</b> ${ctx.session.settings.selectedTopic}`, {
+        parse_mode: 'HTML',
+      });
     ctx.session.messages.push({
       role: openAi.roles.USER,
-      content: `Let's discuss: ${ctx.session.settings.selectedTopic}.`,
+      content: `Let's discuss: ${ctx.session.settings.selectedTopic?.slice(2)}.`,
     });
     const response = await openAi.chat(ctx.session.messages);
     ctx.session.lastResponse = response.content;
@@ -28,14 +27,8 @@ const selectTopic = async (ctx, index) => {
     await ctx.replyWithVoice(
       { source },
       Markup.keyboard([
-        [
-          Markup.button.callback(`🔤 Show text`),
-          Markup.button.callback(`🆘 Hint please`),
-        ],
-        [
-          Markup.button.callback(`🔄 Change topic`),
-          Markup.button.callback(`🏁 Finish & feedback`),
-        ],
+        [Markup.button.callback(`🔤 Show text`), Markup.button.callback(`🆘 Hint please`)],
+        [Markup.button.callback(`🔄 Change topic`), Markup.button.callback(`🏁 Finish & feedback`)],
       ]).resize(),
     );
   } catch (error) {

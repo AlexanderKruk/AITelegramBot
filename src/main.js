@@ -18,6 +18,9 @@ import changeTopicHears from './hears/changeTopicHears.js';
 import finishAndFeedbackHears from './hears/finishAndFeedbackHears.js';
 import messageVoiceOn from './on/messageVoiceOn.js';
 import messageTextOn from './on/messageTextOn.js';
+import startNewLessonAction from './actions/startNewLessonAction.js';
+import canWeWriteYesAction from './actions/canWeWriteYesAction.js';
+import canWeWriteNoAction from './actions/canWeWriteNoAction.js';
 
 const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
 
@@ -34,11 +37,13 @@ bot.action('selectTopic1', ga4.view('topic selected'), selectTopic1Action);
 bot.action('selectTopic2', ga4.view('topic selected'), selectTopic2Action);
 bot.action('selectMyOwnTopic', ga4.view('my own topic'), selectMyOwnTopicAction);
 
-bot.action('startNewLesson', ga4.view('start new lesson'), changeTopicsAction);
+bot.action('startNewLesson', ga4.view('start new lesson'), startNewLessonAction);
 
 bot.action('showGrammarDetails', ga4.view('show grammar details'), showGrammarDetailsAction);
-
 bot.action('showPronounceDetails', ga4.view('show pronounce details'), showPronounceDetailsAction);
+
+bot.action('canWeWriteYes', ga4.view('write me yes'), canWeWriteYesAction);
+bot.action('canWeWriteNo', ga4.view('write me no'), canWeWriteNoAction);
 
 bot.hears('🔤 Show text', ga4.view('show text'), showTextHears);
 bot.hears('🆘 Hint please', ga4.view('hint please'), hintPleaseHears);

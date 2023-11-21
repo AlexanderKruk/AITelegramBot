@@ -20,8 +20,18 @@ export default async (ctx) => {
         parse_mode: 'HTML',
       },
     );
-    await setChatGptSettings(ctx);
-    await getTopic(ctx);
+    if (ctx.session.userData.canWeWrite === null) {
+      ctx.reply(
+        'Thank you for using FluentSpeak 😊\nCould you answer a few simple questions about your experience?',
+        Markup.inlineKeyboard([
+          [Markup.button.callback('Yes, write me', 'canWeWriteYes')],
+          [Markup.button.callback('No, thank you', 'canWeWriteNo')],
+        ]),
+      );
+    } else {
+      await setChatGptSettings(ctx);
+      await getTopic(ctx);
+    }
   } catch (error) {
     console.error('myOwnTopic: ', error.message);
     await ctx.reply(ERROR_MESSAGE);

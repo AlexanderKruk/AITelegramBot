@@ -1,8 +1,19 @@
-export const settings = {
+const settings = {
   practiceLanguage: 'English',
   languageLevel: 'Intermediate',
   topics: [],
   selectedTopic: '',
+  maxDayFreeTokens: 10000,
+  maxDayPaidTokens: 50000,
+  maxDaysFreeTrial: 3,
+};
+
+export const userData = {
+  premium: false,
+  dayTokens: 0,
+  trialDays: 0,
+  trialDate: '',
+  canWeWrite: null,
 };
 
 export const INITIAL_SESSION = {
@@ -16,6 +27,7 @@ export const INITIAL_SESSION = {
   grammarScores: [],
   averagePronunciationScore: 0,
   averageGrammarScore: 0,
+  userData,
 };
 
 export const ERROR_MESSAGE = 'Ooops. Please try again or /start.';

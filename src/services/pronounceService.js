@@ -3,29 +3,27 @@ import * as fs from 'fs';
 import config from 'config';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
+import { prices } from '../constants.js';
 
 export const __dirname = dirname(fileURLToPath(import.meta.url));
 
 class Pronounce {
   constructor() {}
 
-  async getPronunciationAssessment(wavPath, reference_text) {
+  async getPronunciationAssessment(wavPath, reference_text, duration) {
     try {
-      var audioConfig = sdk.AudioConfig.fromWavFileInput(
-        fs.readFileSync(resolve(wavPath)),
-      );
+      var audioConfig = sdk.AudioConfig.fromWavFileInput(fs.readFileSync(resolve(wavPath)));
       var speechConfig = sdk.SpeechConfig.fromSubscription(
         config.get('MS_SUBSCRIPTION_KEY'),
         'germanywestcentral',
       );
       // create pronunciation assessment config, set grading system, granularity and if enable miscue based on your requirement.
-      const pronunciationAssessmentConfig =
-        new sdk.PronunciationAssessmentConfig.fromJSON(
-          '{"GradingSystem": "HundredMark", \
+      const pronunciationAssessmentConfig = new sdk.PronunciationAssessmentConfig.fromJSON(
+        '{"GradingSystem": "HundredMark", \
               "Granularity": "Word", \
               "EnableMiscue": "False", \
               "EnableProsodyAssessment": "False"}',
-        );
+      );
       pronunciationAssessmentConfig.referenceText = reference_text;
 
       // setting the recognition language to English.
@@ -38,8 +36,7 @@ class Pronounce {
       function onRecognizedResult(result) {
         // console.log('pronunciation assessment for: ', reference_text);
         // console.log('pronunciation assessment for: ', result.text);
-        var pronunciation_result =
-          sdk.PronunciationAssessmentResult.fromResult(result);
+        var pronunciation_result = sdk.PronunciationAssessmentResult.fromResult(result);
         // console.log(" Accuracy score: ", pronunciation_result.accuracyScore, '\n',
         //     "pronunciation score: ", pronunciation_result.pronunciationScore, '\n',
         //     "completeness score : ", pronunciation_result.completenessScore, '\n',
@@ -75,13 +72,13 @@ class Pronounce {
             pronunciation_result.fluencyScore * 0.2 +
             pronunciation_result.completenessScore * 0.2,
         );
-
         return {
           pronounceScore,
           pronounceText: result.text,
           pronounceWords: pronunciation_result.detailResult.Words,
           accuracyScore: pronunciation_result.accuracyScore,
           fluencyScore: pronunciation_result.fluencyScore,
+          cost: duration * prices['pronunciation-assessment'].audio,
         };
       }
 

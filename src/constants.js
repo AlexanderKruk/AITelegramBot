@@ -3,16 +3,17 @@ const settings = {
   languageLevel: 'Intermediate',
   topics: [],
   selectedTopic: '',
-  maxDayFreeTokens: 10000,
-  maxDayPaidTokens: 50000,
-  maxDaysFreeTrial: 3,
+  maxDayFreeCost: 0.01,
+  maxDayPaidCost: 0.01,
+  maxDaysTrial: 3,
 };
 
 export const userData = {
   premium: false,
-  dayTokens: 0,
+  dayCost: 0,
+  monthCost: 0,
   trialDays: 0,
-  trialDate: '',
+  lastTrialDate: '',
   canWeWrite: null,
 };
 
@@ -28,6 +29,26 @@ export const INITIAL_SESSION = {
   averagePronunciationScore: 0,
   averageGrammarScore: 0,
   userData,
+};
+
+export const prices = {
+  'gpt-3.5-turbo-1106': {
+    prompt: 0.000001,
+    completion: 0.000002,
+  },
+  'gpt-4-1106-preview': {
+    prompt: 0.00001,
+    completion: 0.00003,
+  },
+  'whisper-1': {
+    audio: 0.0001,
+  },
+  tts: {
+    text: 0.000015,
+  },
+  'pronunciation-assessment': {
+    audio: 0.00042,
+  },
 };
 
 export const ERROR_MESSAGE = 'Ooops. Please try again or /start.';

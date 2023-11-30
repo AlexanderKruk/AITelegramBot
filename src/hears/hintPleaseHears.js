@@ -5,7 +5,7 @@ import { ERROR_MESSAGE } from '../constants.js';
 export default async (ctx) => {
   try {
     ctx.sendChatAction('typing');
-    const response =
+    const { message: response, cost: hintCost } =
       ctx?.session?.lastResponse &&
       (await logAsyncFunctionTime(
         () =>
@@ -22,6 +22,7 @@ export default async (ctx) => {
           ),
         'openAi - hint',
       ));
+    ctx.session.userData.dayCost += hintCost;
     await ctx.replyWithHTML(`<b>You can say:</b>\n${response.content}`);
   } catch (error) {
     console.log('Hint error: ', error.message);

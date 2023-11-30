@@ -7,6 +7,19 @@ import { diff, pronounceCorrect, cutLongTermMemory, logAsyncFunctionTime } from 
 import { Markup } from 'telegraf';
 
 export default async (ctx) => {
+  if (ctx.session.userData.premium) {
+    console.log('premium user');
+    if (ctx.session.userData.dayCost > ctx.session.settings.maxDayPaidCost) {
+      ctx.reply('You have premium. Next lesson tommorow');
+      return;
+    }
+  } else {
+    console.log('trial user', ctx.session.userData.dayCost, ctx.session.settings.maxDayFreeCost);
+    if (ctx.session.userData.dayCost > ctx.session.settings.maxDayFreeCost) {
+      ctx.reply('You are on trial. Next lesson tommorow');
+      return;
+    }
+  }
   let globalResponse;
   let isError = false;
   try {
@@ -26,8 +39,13 @@ export default async (ctx) => {
       ogg.toMp3(oggPath, userId),
       ogg.toWav(oggPath, userId),
     ]);
-    let text = await logAsyncFunctionTime(
-      () => openAi.transcription(mp3Path, ctx.session.settings.practiceLanguage),
+    let { text, cost: costTranscription } = await logAsyncFunctionTime(
+      () =>
+        openAi.transcription(
+          mp3Path,
+          ctx.session.settings.practiceLanguage,
+          ctx.message.voice.duration,
+        ),
       'openAi - transcript audio',
     );
     text = /[A-Za-z]$/.test(text) ? text + '.' : text;
@@ -35,12 +53,19 @@ export default async (ctx) => {
     ctx.session.messages.push({ role: openAi.roles.USER, content: text });
     ctx.sendChatAction('typing');
     const [
-      { pronounceScore, pronounceText, pronounceWords, accuracyScore, fluencyScore },
-      grammar,
-      response,
+      {
+        pronounceScore,
+        pronounceText,
+        pronounceWords,
+        accuracyScore,
+        fluencyScore,
+        cost: costPronounce,
+      },
+      { message: grammar, cost: costGrammar },
+      { message: response, cost: costAnswer },
     ] = await Promise.all([
       logAsyncFunctionTime(
-        () => pronounce.getPronunciationAssessment(wavPath, text),
+        () => pronounce.getPronunciationAssessment(wavPath, text, ctx.message.voice.duration),
         'microsoft - pronounce assasment',
       ),
       logAsyncFunctionTime(
@@ -59,6 +84,7 @@ export default async (ctx) => {
       ),
       logAsyncFunctionTime(() => openAi.chat(ctx.session.messages), 'openAi - make answer'),
     ]);
+    ctx.session.userData.dayCost += costTranscription + costPronounce + costGrammar + costAnswer;
     globalResponse = response;
     ctx.sendChatAction('typing');
     const corrected = grammar?.content?.match(/.*"([^"]+)"/)[0].slice(1, -1) || '';
@@ -99,7 +125,7 @@ export default async (ctx) => {
       role: openAi.roles.ASSISTANT,
       content: globalResponse.content,
     });
-    const source = await logAsyncFunctionTime(
+    const { mp3: source, cost: textToSpeechCost } = await logAsyncFunctionTime(
       () =>
         textConverter.textToSpeech(
           `${globalResponse.content || ''}`,
@@ -107,6 +133,7 @@ export default async (ctx) => {
         ),
       'openAi - text to speech',
     );
+    ctx.session.userData.dayCost += textToSpeechCost;
     ctx.session.lastResponse = globalResponse.content;
     await ctx.replyWithVoice(
       { source },
@@ -115,6 +142,7 @@ export default async (ctx) => {
         [Markup.button.callback(`🔄 Change topic`), Markup.button.callback(`🏁 Finish & feedback`)],
       ]).resize(),
     );
+    await ctx.reply(`cost: $${ctx.session.userData.dayCost}`);
     console.log('=============================================================================');
   } catch (error) {
     console.error('make audio error: ', error.message);

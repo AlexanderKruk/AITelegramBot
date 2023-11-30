@@ -1,6 +1,7 @@
 import { __dirname } from './audioConverterService.js';
 import config from 'config';
 import OpenAIApi from 'openai';
+import { prices } from '../constants.js';
 
 class TextConverter {
   async textToSpeech(text, language) {
@@ -12,7 +13,7 @@ class TextConverter {
         input: text,
         response_format: 'opus',
       });
-      return Buffer.from(await mp3.arrayBuffer());
+      return { mp3: Buffer.from(await mp3.arrayBuffer()), cost: text.length * prices.tts.text };
     } catch (error) {
       console.log('textToSpeech error', error.message);
     }

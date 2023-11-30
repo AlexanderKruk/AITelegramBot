@@ -12,7 +12,7 @@ export default async (ctx) => {
       }
     }
     if (userText.length > 300) {
-      const response = await logAsyncFunctionTime(
+      const { message: response, cost: feedbackCost } = await logAsyncFunctionTime(
         () =>
           openAi.chat(
             {
@@ -35,6 +35,7 @@ export default async (ctx) => {
           ),
         'openAi - feedback',
       );
+      ctx.session.userData.dayCost += feedbackCost;
       ctx.session.feedback = JSON.parse(response.content);
       ctx.session.averagePronunciationScore = average(ctx.session.pronounseScores);
       ctx.session.averageGrammarScore = average(ctx.session.grammarScores);

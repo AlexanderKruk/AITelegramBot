@@ -14,16 +14,17 @@ const selectTopic = async (ctx, index) => {
       role: openAi.roles.USER,
       content: `Let's discuss: ${ctx.session.settings.selectedTopic?.slice(2)}.`,
     });
-    const response = await openAi.chat(ctx.session.messages);
+    const { message: response, cost: answerCost } = await openAi.chat(ctx.session.messages);
     ctx.session.lastResponse = response.content;
     ctx.session.messages.push({
       role: openAi.roles.ASSISTANT,
       content: response.content,
     });
-    const source = await textConverter.textToSpeech(
+    const { mp3: source, cost: textToSpeechCost } = await textConverter.textToSpeech(
       response.content,
       ctx.session.settings.practiceLanguage,
     );
+    ctx.session.userData.dayCost += answerCost + textToSpeechCost;
     await ctx.replyWithVoice(
       { source },
       Markup.keyboard([

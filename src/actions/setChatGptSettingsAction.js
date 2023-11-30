@@ -5,7 +5,7 @@ const setChatGptSettings = async (ctx) => {
   try {
     ctx.session = {
       ...structuredClone(INITIAL_SESSION),
-      userData: ctx.session.userData || userData,
+      // userData: ctx.session.userData || userData,
     };
     ctx.session.messages.push({
       role: openAi.roles.SYSTEM,

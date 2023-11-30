@@ -1,6 +1,7 @@
 import OpenAIApi from 'openai';
 import config from 'config';
 import { createReadStream } from 'fs';
+import { prices } from '../constants.js';
 
 class OpenAI {
   roles = {
@@ -20,7 +21,12 @@ class OpenAI {
         messages,
         response_format: { type },
       });
-      return response.choices[0].message;
+      return {
+        message: response.choices[0].message,
+        cost:
+          response.usage.prompt_tokens * prices[model].prompt +
+          response.usage.completion_tokens * prices[model].completion,
+      };
     } catch (error) {
       console.log('openai chat error', error.message);
     }
@@ -39,14 +45,14 @@ class OpenAI {
     }
   };
 
-  async transcription(filepath, language) {
+  async transcription(filepath, language, duration) {
     try {
       const transcription = await this.openai.audio.transcriptions.create({
         file: createReadStream(filepath),
         model: 'whisper-1',
         language: this.transcriptionLanguage(language),
       });
-      return transcription.text;
+      return { text: transcription.text, cost: duration * prices['whisper-1'].audio };
     } catch (error) {
       console.log('transcription error', error.message);
     }

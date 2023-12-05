@@ -2,9 +2,14 @@ import { Markup } from 'telegraf';
 import { ERROR_MESSAGE } from '../constants.js';
 import { openAi } from '../services/openAiService.js';
 import { logAsyncFunctionTime, average } from '../utils/utils.js';
+import dailyUsage from '../helpers/dailyUsage.js';
 
 export default async (ctx) => {
   try {
+    ctx.sendChatAction('typing');
+    if (ctx.session.userData.dayFreeFeedback >= ctx.session.settings.maxDayFreeFeedback) {
+      if (await dailyUsage(ctx)) return;
+    }
     let userText = '';
     for (const message of ctx.session.messages) {
       if (message.role === openAi.roles.USER) {
@@ -12,6 +17,7 @@ export default async (ctx) => {
       }
     }
     if (userText.length > 300) {
+      ctx.sendChatAction('typing');
       const { message: response, cost: feedbackCost } = await logAsyncFunctionTime(
         () =>
           openAi.chat(
@@ -35,6 +41,7 @@ export default async (ctx) => {
           ),
         'openAi - feedback',
       );
+      ctx.sendChatAction('typing');
       ctx.session.userData.dayCost += feedbackCost;
       ctx.session.feedback = JSON.parse(response.content);
       ctx.session.averagePronunciationScore = average(ctx.session.pronounseScores);
@@ -55,10 +62,11 @@ export default async (ctx) => {
           [Markup.button.callback(`🌟 Start new lesson`, 'startNewLesson')],
         ]).resize(),
       );
+      ctx.session.userData.dayFreeFeedback += 1;
       // await ctx.reply(
       //   'Your feedback',
       //   Markup.inlineKeyboard([
-      //     [Markup.button.callback(`🌟 Start new lesson`, 'startNewLesson')],
+      //     Markup.button.callback(`🌟 Start new lesson`, 'startNewLesson'),
       //   ]).resize(),
       // );
     } else {

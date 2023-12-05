@@ -21,15 +21,20 @@ import messageTextOn from './on/messageTextOn.js';
 import startNewLessonAction from './actions/startNewLessonAction.js';
 import canWeWriteYesAction from './actions/canWeWriteYesAction.js';
 import canWeWriteNoAction from './actions/canWeWriteNoAction.js';
+import subscribeAction from './actions/subscribeAction.js';
 
 const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
 
 bot.use(session);
 bot.use(ga4.middleware());
 
-bot.telegram.setMyCommands([{ command: '/start', description: 'Start' }]);
+bot.telegram.setMyCommands([
+  { command: '/start', description: 'Start' },
+  { command: '/subscribe', description: 'Subscribe' },
+]);
 
 bot.command('start', ga4.view('start'), startAction);
+bot.command('subscribe', ga4.view('subscribe'), subscribeAction);
 
 bot.action('changeTopics', ga4.view('topics change'), changeTopicsAction);
 bot.action('selectTopic0', ga4.view('topic selected'), selectTopic0Action);
@@ -42,13 +47,15 @@ bot.action('startNewLesson', ga4.view('start new lesson'), startNewLessonAction)
 bot.action('showGrammarDetails', ga4.view('show grammar details'), showGrammarDetailsAction);
 bot.action('showPronounceDetails', ga4.view('show pronounce details'), showPronounceDetailsAction);
 
+bot.action('finishAndFeedback', ga4.view('finish & feedback action'), finishAndFeedbackHears);
+
 bot.action('canWeWriteYes', ga4.view('write me yes'), canWeWriteYesAction);
 bot.action('canWeWriteNo', ga4.view('write me no'), canWeWriteNoAction);
 
 bot.hears('🔤 Show text', ga4.view('show text'), showTextHears);
 bot.hears('🆘 Hint please', ga4.view('hint please'), hintPleaseHears);
 bot.hears('🔄 Change topic', ga4.view('change topic'), changeTopicHears);
-bot.hears('🏁 Finish & feedback', ga4.view('finish & feedback'), finishAndFeedbackHears);
+bot.hears('🏁 Finish & feedback', ga4.view('finish & feedback hears'), finishAndFeedbackHears);
 
 bot.on(message('voice'), ga4.view('user voice message'), messageVoiceOn);
 bot.on(message('text'), ga4.view('user text message'), messageTextOn);

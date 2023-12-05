@@ -1,9 +1,11 @@
 import { getRandomIndexes } from '../utils/utils.js';
 import { ERROR_MESSAGE, topics } from '../constants.js';
 import { Markup } from 'telegraf';
+import dailyUsage from '../helpers/dailyUsage.js';
 
 const getTopic = async (ctx) => {
   try {
+    if (await dailyUsage(ctx)) return;
     const topicIndexes = getRandomIndexes(130, 3);
     if (ctx?.session?.settings?.topics) {
       ctx.session.settings.topics = [];

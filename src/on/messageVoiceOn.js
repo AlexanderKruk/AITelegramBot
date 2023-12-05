@@ -5,24 +5,13 @@ import { pronounce } from '../services/pronounceService.js';
 import { textConverter } from '../services/textToSpeechService.js';
 import { diff, pronounceCorrect, cutLongTermMemory, logAsyncFunctionTime } from '../utils/utils.js';
 import { Markup } from 'telegraf';
+import dailyUsage from '../helpers/dailyUsage.js';
 
 export default async (ctx) => {
-  if (ctx.session.userData.premium) {
-    console.log('premium user');
-    if (ctx.session.userData.dayCost > ctx.session.settings.maxDayPaidCost) {
-      ctx.reply('You have premium. Next lesson tommorow');
-      return;
-    }
-  } else {
-    console.log('trial user', ctx.session.userData.dayCost, ctx.session.settings.maxDayFreeCost);
-    if (ctx.session.userData.dayCost > ctx.session.settings.maxDayFreeCost) {
-      ctx.reply('You are on trial. Next lesson tommorow');
-      return;
-    }
-  }
   let globalResponse;
   let isError = false;
   try {
+    if (await dailyUsage(ctx)) return;
     ctx.sendChatAction('typing');
     ctx.session?.lastCheckMessage?.message_id &&
       (await ctx.telegram.editMessageText(
@@ -39,7 +28,7 @@ export default async (ctx) => {
       ogg.toMp3(oggPath, userId),
       ogg.toWav(oggPath, userId),
     ]);
-    let { text, cost: costTranscription } = await logAsyncFunctionTime(
+    const { text, cost: costTranscription } = await logAsyncFunctionTime(
       () =>
         openAi.transcription(
           mp3Path,
@@ -48,9 +37,9 @@ export default async (ctx) => {
         ),
       'openAi - transcript audio',
     );
-    text = /[A-Za-z]$/.test(text) ? text + '.' : text;
-    ctx.session.messages = cutLongTermMemory(ctx.session.messages, 21, 2);
-    ctx.session.messages.push({ role: openAi.roles.USER, content: text });
+    const modifiedText = /[A-Za-z]$/.test(text) ? text + '.' : text;
+    ctx.session.messages = cutLongTermMemory(ctx.session.messages, 16, 2);
+    ctx.session.messages.push({ role: openAi.roles.USER, content: modifiedText });
     ctx.sendChatAction('typing');
     const [
       {
@@ -65,7 +54,8 @@ export default async (ctx) => {
       { message: response, cost: costAnswer },
     ] = await Promise.all([
       logAsyncFunctionTime(
-        () => pronounce.getPronunciationAssessment(wavPath, text, ctx.message.voice.duration),
+        () =>
+          pronounce.getPronunciationAssessment(wavPath, modifiedText, ctx.message.voice.duration),
         'microsoft - pronounce assasment',
       ),
       logAsyncFunctionTime(
@@ -75,7 +65,7 @@ export default async (ctx) => {
               messages: [
                 {
                   role: openAi.roles.SYSTEM,
-                  content: `It is English. Correct my spelling and grammar. Return text in quotes. Text: "${text}"`,
+                  content: `It is English. Correct my spelling and grammar. Return text in quotes. Text: "${modifiedText}"`,
                 },
               ],
             }.messages,
@@ -88,7 +78,7 @@ export default async (ctx) => {
     globalResponse = response;
     ctx.sendChatAction('typing');
     const corrected = grammar?.content?.match(/.*"([^"]+)"/)[0].slice(1, -1) || '';
-    const { diffText, grammarScore } = await diff(text, corrected);
+    const { diffText, grammarScore } = await diff(modifiedText, corrected);
     ctx.session.diffText = diffText || '';
     ctx.session.grammarScore = grammarScore || '-';
     ctx.session.grammarScores.push(Number(grammarScore) || 0);
@@ -121,6 +111,7 @@ export default async (ctx) => {
 
   try {
     ctx.sendChatAction('record_voice');
+    if (await dailyUsage(ctx)) return;
     ctx.session.messages.push({
       role: openAi.roles.ASSISTANT,
       content: globalResponse.content,
@@ -142,7 +133,6 @@ export default async (ctx) => {
         [Markup.button.callback(`🔄 Change topic`), Markup.button.callback(`🏁 Finish & feedback`)],
       ]).resize(),
     );
-    await ctx.reply(`cost: $${ctx.session.userData.dayCost}`);
     console.log('=============================================================================');
   } catch (error) {
     console.error('make audio error: ', error.message);

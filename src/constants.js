@@ -3,16 +3,21 @@ const settings = {
   languageLevel: 'Intermediate',
   topics: [],
   selectedTopic: '',
-  maxDayFreeCost: 0.01,
-  maxDayPaidCost: 0.01,
+  maxDayFreeCost: 0.14,
+  maxDayPaidCost: 0.29,
   maxDaysTrial: 3,
+  maxDayFreeFeedback: 1,
 };
 
 export const userData = {
+  from: {},
   premium: false,
   dayCost: 0,
+  dailyCost: [],
   monthCost: 0,
   trialDays: 0,
+  dayFreeFeedback: 0,
+  lastPremiumDate: '',
   lastTrialDate: '',
   canWeWrite: null,
 };

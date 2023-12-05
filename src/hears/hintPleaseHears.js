@@ -1,10 +1,12 @@
 import { openAi } from '../services/openAiService.js';
 import { logAsyncFunctionTime } from '../utils/utils.js';
 import { ERROR_MESSAGE } from '../constants.js';
+import dailyUsage from '../helpers/dailyUsage.js';
 
 export default async (ctx) => {
   try {
     ctx.sendChatAction('typing');
+    if (await dailyUsage(ctx)) return;
     const { message: response, cost: hintCost } =
       ctx?.session?.lastResponse &&
       (await logAsyncFunctionTime(

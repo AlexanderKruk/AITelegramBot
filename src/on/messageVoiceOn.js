@@ -11,6 +11,9 @@ export default async (ctx) => {
   let globalResponse;
   let isError = false;
   try {
+    ctx.session.userData.userAudioMessages
+      ? (ctx.session.userData.userAudioMessages += 1)
+      : (ctx.session.userData.userAudioMessages = 1);
     if (await dailyUsage(ctx)) return;
     ctx.sendChatAction('typing');
     ctx.session?.lastCheckMessage?.message_id &&

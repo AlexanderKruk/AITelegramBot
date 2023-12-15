@@ -3,6 +3,7 @@ import { Markup } from 'telegraf';
 
 export default async (ctx) => {
   const currentDate = dayjs().format('DD.MM.YYYY');
+  // const currentDate = '16.12.2023';
   if (ctx.session.userData.premium) {
     if (ctx.session.userData.lastPremiumDate !== currentDate) {
       ctx.session.userData.monthCost += ctx.session.userData.dayCost;
@@ -29,12 +30,14 @@ export default async (ctx) => {
     }
   } else {
     if (ctx.session.userData.lastTrialDate !== currentDate) {
+      if (ctx.session.userData.dayCost !== 0) {
+        ctx.session.userData.dayFreeFeedback = 0;
+        ctx.session.userData.monthCost += ctx.session.userData.dayCost;
+        ctx.session.userData.trialDays += 1;
+        ctx.session.userData.dailyCost.push(ctx.session.userData.dayCost);
+        ctx.session.userData.dayCost = 0;
+      }
       ctx.session.userData.lastTrialDate = currentDate;
-      ctx.session.userData.trialDays += 1;
-      ctx.session.userData.monthCost += ctx.session.userData.dayCost;
-      ctx.session.userData.dailyCost.push(ctx.session.userData.dayCost);
-      ctx.session.userData.dayCost = 0;
-      ctx.session.userData.dayFreeFeedback = 0;
     }
     if (ctx.session.userData.trialDays >= ctx.session.settings.maxDaysTrial) {
       await ctx.reply(

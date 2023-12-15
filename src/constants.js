@@ -20,6 +20,8 @@ export const userData = {
   lastPremiumDate: '',
   lastTrialDate: '',
   canWeWrite: null,
+  userTextMessages: 0,
+  userAudioMessages: 0,
 };
 
 export const INITIAL_SESSION = {

@@ -7,7 +7,10 @@ import dailyUsage from '../helpers/dailyUsage.js';
 export default async (ctx) => {
   try {
     ctx.sendChatAction('typing');
-    if (ctx.session.userData.dayFreeFeedback >= ctx.session.settings.maxDayFreeFeedback) {
+    if (
+      ctx.session.userData.trialDays >= ctx.session.settings.maxDaysTrial ||
+      ctx.session.userData.dayFreeFeedback >= ctx.session.settings.maxDayFreeFeedback
+    ) {
       if (await dailyUsage(ctx)) return;
     }
     let userText = '';

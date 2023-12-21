@@ -29,7 +29,7 @@ const selectTopic = async (ctx, index) => {
       { source },
       Markup.keyboard([
         [Markup.button.callback(`🔤 Show text`), Markup.button.callback(`🆘 Hint please`)],
-        [Markup.button.callback(`🔄 Change topic`), Markup.button.callback(`🏁 Finish & feedback`)],
+        [Markup.button.callback(`🔄 Select mode`), Markup.button.callback(`🏁 Finish & feedback`)],
       ]).resize(),
     );
   } catch (error) {

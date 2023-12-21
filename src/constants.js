@@ -1,7 +1,19 @@
+export const mode = {
+  topic: 'topic',
+  interview: 'interview',
+  interviewPosition: 'interviewPosition',
+  scenario: 'scenario',
+};
+
 const settings = {
   practiceLanguage: 'English',
   languageLevel: 'Intermediate',
+  mode: mode.topic,
   topics: [],
+  interview: {
+    position: '',
+    isPosition: false,
+  },
   selectedTopic: '',
   maxDayFreeCost: 0.14,
   maxDayPaidCost: 0.29,

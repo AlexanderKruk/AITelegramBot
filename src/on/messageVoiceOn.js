@@ -6,139 +6,213 @@ import { textConverter } from '../services/textToSpeechService.js';
 import { diff, pronounceCorrect, cutLongTermMemory, logAsyncFunctionTime } from '../utils/utils.js';
 import { Markup } from 'telegraf';
 import dailyUsage from '../helpers/dailyUsage.js';
+import { mode } from '../constants.js';
+import jobInterviewAction from '../actions/jobInterviewAction.js';
 
 export default async (ctx) => {
   let globalResponse;
   let isError = false;
   try {
-    ctx.session.userData.userAudioMessages
-      ? (ctx.session.userData.userAudioMessages += 1)
-      : (ctx.session.userData.userAudioMessages = 1);
+    ctx.session.userData.userAudioMessages ??= 0;
+    ctx.session.userData.userAudioMessages += 1;
     if (await dailyUsage(ctx)) return;
-    ctx.sendChatAction('typing');
-    ctx.session?.lastCheckMessage?.message_id &&
-      (await ctx.telegram.editMessageText(
-        ctx.chat.id,
-        ctx.session.lastCheckMessage.message_id,
-        0,
-        ctx.session.lastCheckMessage.text,
-        { entities: ctx.session.lastCheckMessage.entities },
-      ));
-    const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id);
-    const userId = ctx?.message?.from?.id;
-    const oggPath = await ogg.create(link.href, userId);
-    const [mp3Path, wavPath] = await Promise.all([
-      ogg.toMp3(oggPath, userId),
-      ogg.toWav(oggPath, userId),
-    ]);
-    const { text, cost: costTranscription } = await logAsyncFunctionTime(
-      () =>
-        openAi.transcription(
-          mp3Path,
-          ctx.session.settings.practiceLanguage,
-          ctx.message.voice.duration,
-        ),
-      'openAi - transcript audio',
-    );
-    const modifiedText = /[A-Za-z]$/.test(text) ? text + '.' : text;
-    ctx.session.messages = cutLongTermMemory(ctx.session.messages, 16, 2);
-    ctx.session.messages.push({ role: openAi.roles.USER, content: modifiedText });
-    ctx.sendChatAction('typing');
-    const [
-      {
-        pronounceScore,
-        pronounceText,
-        pronounceWords,
-        accuracyScore,
-        fluencyScore,
-        cost: costPronounce,
-      },
-      { message: grammar, cost: costGrammar },
-      { message: response, cost: costAnswer },
-    ] = await Promise.all([
-      logAsyncFunctionTime(
-        () =>
-          pronounce.getPronunciationAssessment(wavPath, modifiedText, ctx.message.voice.duration),
-        'microsoft - pronounce assasment',
-      ),
-      logAsyncFunctionTime(
-        () =>
-          openAi.chat(
-            {
-              messages: [
+    switch (ctx.session.settings.mode) {
+      case mode.interviewPosition: {
+        const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id);
+        const userId = ctx?.message?.from?.id;
+        const oggPath = await ogg.create(link.href, userId);
+        const [mp3Path] = await Promise.all([ogg.toMp3(oggPath, userId)]);
+        const { text, cost: costTranscription } = await logAsyncFunctionTime(
+          () =>
+            openAi.transcription(
+              mp3Path,
+              ctx.session.settings.practiceLanguage,
+              ctx.message.voice.duration,
+            ),
+          'openAi - transcript audio',
+        );
+        const { message: response, cost: feedbackCost } = await logAsyncFunctionTime(
+          () =>
+            openAi.chat(
+              {
+                messages: [
+                  {
+                    role: openAi.roles.SYSTEM,
+                    content:
+                      'Act as a job interviewer. You have to determine if there is a job position in the text. JSON must have two field position and isPosition.',
+                  },
+                  {
+                    role: openAi.roles.USER,
+                    content: text,
+                  },
+                ],
+              }.messages,
+              'gpt-3.5-turbo-1106',
+              'json_object',
+            ),
+          'openAi - get job position',
+        );
+        ctx.session.settings.interview = {};
+        ctx.session.settings.interview = JSON.parse(response.content);
+        if (ctx.session.settings?.interview?.isPosition) {
+          await ctx.replyWithHTML(
+            '<b>Position</b>: ' +
+              ctx.session.settings.interview.position.replace(/(^\w|\s\w)/g, (m) =>
+                m.toUpperCase(),
+              ),
+          );
+          ctx.session.settings.mode = mode.interview;
+          await jobInterviewAction(ctx);
+        } else {
+          await ctx.reply(
+            "I don't understand understand the position. Can you say it another way?",
+          );
+        }
+        break;
+      }
+      case mode.interview:
+      case mode.scenario:
+      case mode.topic: {
+        ctx.sendChatAction('typing');
+        ctx.session?.lastCheckMessage?.message_id &&
+          (await ctx.telegram.editMessageText(
+            ctx.chat.id,
+            ctx.session.lastCheckMessage.message_id,
+            0,
+            ctx.session.lastCheckMessage.text,
+            { entities: ctx.session.lastCheckMessage.entities },
+          ));
+        const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id);
+        const userId = ctx?.message?.from?.id;
+        const oggPath = await ogg.create(link.href, userId);
+        const [mp3Path, wavPath] = await Promise.all([
+          ogg.toMp3(oggPath, userId),
+          ogg.toWav(oggPath, userId),
+        ]);
+        const { text, cost: costTranscription } = await logAsyncFunctionTime(
+          () =>
+            openAi.transcription(
+              mp3Path,
+              ctx.session.settings.practiceLanguage,
+              ctx.message.voice.duration,
+            ),
+          'openAi - transcript audio',
+        );
+        const modifiedText = /[A-Za-z]$/.test(text) ? text + '.' : text;
+        ctx.session.messages = cutLongTermMemory(ctx.session.messages, 16, 2);
+        ctx.session.messages.push({ role: openAi.roles.USER, content: modifiedText });
+        ctx.sendChatAction('typing');
+        const [
+          {
+            pronounceScore,
+            pronounceText,
+            pronounceWords,
+            accuracyScore,
+            fluencyScore,
+            cost: costPronounce,
+          },
+          { message: grammar, cost: costGrammar },
+          { message: response, cost: costAnswer },
+        ] = await Promise.all([
+          logAsyncFunctionTime(
+            () =>
+              pronounce.getPronunciationAssessment(
+                wavPath,
+                modifiedText,
+                ctx.message.voice.duration,
+              ),
+            'microsoft - pronounce assasment',
+          ),
+          logAsyncFunctionTime(
+            () =>
+              openAi.chat(
                 {
-                  role: openAi.roles.SYSTEM,
-                  content: `It is English. Correct my spelling and grammar. Return text in quotes. Text: "${modifiedText}"`,
-                },
+                  messages: [
+                    {
+                      role: openAi.roles.SYSTEM,
+                      content: `It is English. Correct my spelling and grammar. Return text in quotes. Text: "${modifiedText}"`,
+                    },
+                  ],
+                }.messages,
+              ),
+            'openAi - check grammar',
+          ),
+          logAsyncFunctionTime(() => openAi.chat(ctx.session.messages), 'openAi - make answer'),
+        ]);
+        ctx.session.userData.dayCost +=
+          costTranscription + costPronounce + costGrammar + costAnswer;
+        globalResponse = response;
+        ctx.sendChatAction('typing');
+        const corrected = grammar?.content?.match(/.*"([^"]+)"/)[0].slice(1, -1) || '';
+        const { diffText, grammarScore } = await diff(modifiedText, corrected);
+        ctx.session.diffText = diffText || '';
+        ctx.session.grammarScore = grammarScore || '-';
+        ctx.session.grammarScores.push(Number(grammarScore) || 0);
+        ctx.session.pronounce = {
+          pronounceScore: pronounceScore || '-',
+          accuracyScore: accuracyScore || '-',
+          fluencyScore: fluencyScore || '-',
+        };
+        ctx.session.pronounseScores.push(Number(pronounceScore) || 0);
+        ctx.session.pronounceText = await pronounceCorrect(pronounceText, pronounceWords);
+        ctx.sendChatAction('typing');
+        ctx.session.lastCheckMessage = {};
+        ctx.session.lastCheckMessage = await ctx.replyWithHTML(
+          `<b>Your message:</b>\n${text}`,
+          Markup.inlineKeyboard([
+            [
+              Markup.button.callback(
+                `🎙 ${ctx.session?.pronounce?.pronounceScore || '-'}%`,
+                'showPronounceDetails',
+              ),
+              Markup.button.callback(
+                `✏️ ${ctx.session?.grammarScore || '-'}%`,
+                'showGrammarDetails',
+              ),
+            ],
+          ]).resize(),
+        );
+      }
+      default: {
+        try {
+          ctx.sendChatAction('record_voice');
+          if (await dailyUsage(ctx)) return;
+          ctx.session.messages.push({
+            role: openAi.roles.ASSISTANT,
+            content: globalResponse.content,
+          });
+          const { mp3: source, cost: textToSpeechCost } = await logAsyncFunctionTime(
+            () =>
+              textConverter.textToSpeech(
+                `${globalResponse.content || ''}`,
+                ctx.session.settings.practiceLanguage,
+              ),
+            'openAi - text to speech',
+          );
+          ctx.session.userData.dayCost += textToSpeechCost;
+          ctx.session.lastResponse = globalResponse.content;
+          await ctx.replyWithVoice(
+            { source },
+            Markup.keyboard([
+              [Markup.button.callback(`🔤 Show text`), Markup.button.callback(`🆘 Hint please`)],
+              [
+                Markup.button.callback(`🔄 Select mode`),
+                Markup.button.callback(`🏁 Finish & feedback`),
               ],
-            }.messages,
-          ),
-        'openAi - check grammar',
-      ),
-      logAsyncFunctionTime(() => openAi.chat(ctx.session.messages), 'openAi - make answer'),
-    ]);
-    ctx.session.userData.dayCost += costTranscription + costPronounce + costGrammar + costAnswer;
-    globalResponse = response;
-    ctx.sendChatAction('typing');
-    const corrected = grammar?.content?.match(/.*"([^"]+)"/)[0].slice(1, -1) || '';
-    const { diffText, grammarScore } = await diff(modifiedText, corrected);
-    ctx.session.diffText = diffText || '';
-    ctx.session.grammarScore = grammarScore || '-';
-    ctx.session.grammarScores.push(Number(grammarScore) || 0);
-    ctx.session.pronounce = {
-      pronounceScore: pronounceScore || '-',
-      accuracyScore: accuracyScore || '-',
-      fluencyScore: fluencyScore || '-',
-    };
-    ctx.session.pronounseScores.push(Number(pronounceScore) || 0);
-    ctx.session.pronounceText = await pronounceCorrect(pronounceText, pronounceWords);
-    ctx.sendChatAction('typing');
-    ctx.session.lastCheckMessage = {};
-    ctx.session.lastCheckMessage = await ctx.replyWithHTML(
-      `<b>Your message:</b>\n${text}`,
-      Markup.inlineKeyboard([
-        [
-          Markup.button.callback(
-            `🎙 ${ctx.session?.pronounce?.pronounceScore || '-'}%`,
-            'showPronounceDetails',
-          ),
-          Markup.button.callback(`✏️ ${ctx.session?.grammarScore || '-'}%`, 'showGrammarDetails'),
-        ],
-      ]).resize(),
-    );
+            ]).resize(),
+          );
+          console.log(
+            '=============================================================================',
+          );
+        } catch (error) {
+          console.error('make audio error: ', error.message);
+          !isError && (await ctx.reply(ERROR_MESSAGE));
+        }
+      }
+    }
   } catch (error) {
     isError = true;
     console.error('check user message error: ', error.message);
     await ctx.reply(ERROR_MESSAGE);
-  }
-
-  try {
-    ctx.sendChatAction('record_voice');
-    if (await dailyUsage(ctx)) return;
-    ctx.session.messages.push({
-      role: openAi.roles.ASSISTANT,
-      content: globalResponse.content,
-    });
-    const { mp3: source, cost: textToSpeechCost } = await logAsyncFunctionTime(
-      () =>
-        textConverter.textToSpeech(
-          `${globalResponse.content || ''}`,
-          ctx.session.settings.practiceLanguage,
-        ),
-      'openAi - text to speech',
-    );
-    ctx.session.userData.dayCost += textToSpeechCost;
-    ctx.session.lastResponse = globalResponse.content;
-    await ctx.replyWithVoice(
-      { source },
-      Markup.keyboard([
-        [Markup.button.callback(`🔤 Show text`), Markup.button.callback(`🆘 Hint please`)],
-        [Markup.button.callback(`🔄 Change topic`), Markup.button.callback(`🏁 Finish & feedback`)],
-      ]).resize(),
-    );
-    console.log('=============================================================================');
-  } catch (error) {
-    console.error('make audio error: ', error.message);
-    !isError && (await ctx.reply(ERROR_MESSAGE));
   }
 };

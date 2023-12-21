@@ -14,7 +14,7 @@ import showGrammarDetailsAction from './actions/showGrammarDetailsAction.js';
 import showPronounceDetailsAction from './actions/showPronounceDetailsAction.js';
 import showTextHears from './hears/showTextHears.js';
 import hintPleaseHears from './hears/hintPleaseHears.js';
-import changeTopicHears from './hears/changeTopicHears.js';
+import selectModeHears from './hears/selectModeHears.js';
 import finishAndFeedbackHears from './hears/finishAndFeedbackHears.js';
 import messageVoiceOn from './on/messageVoiceOn.js';
 import messageTextOn from './on/messageTextOn.js';
@@ -22,6 +22,8 @@ import startNewLessonAction from './actions/startNewLessonAction.js';
 import canWeWriteYesAction from './actions/canWeWriteYesAction.js';
 import canWeWriteNoAction from './actions/canWeWriteNoAction.js';
 import subscribeAction from './actions/subscribeAction.js';
+import jobInterviewAction from './actions/jobInterviewAction.js';
+import getTopicAction from './actions/getTopicAction.js';
 
 const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
 
@@ -36,7 +38,9 @@ bot.telegram.setMyCommands([
 bot.command('start', ga4.view('start'), startAction);
 bot.command('subscribe', ga4.view('subscribe'), subscribeAction);
 
+bot.action('getTopic', ga4.view('get topic'), getTopicAction);
 bot.action('changeTopics', ga4.view('topics change'), changeTopicsAction);
+bot.action('jobInterview', ga4.view('job interview'), jobInterviewAction);
 bot.action('selectTopic0', ga4.view('topic selected'), selectTopic0Action);
 bot.action('selectTopic1', ga4.view('topic selected'), selectTopic1Action);
 bot.action('selectTopic2', ga4.view('topic selected'), selectTopic2Action);
@@ -54,7 +58,7 @@ bot.action('canWeWriteNo', ga4.view('write me no'), canWeWriteNoAction);
 
 bot.hears('🔤 Show text', ga4.view('show text'), showTextHears);
 bot.hears('🆘 Hint please', ga4.view('hint please'), hintPleaseHears);
-bot.hears('🔄 Change topic', ga4.view('change topic'), changeTopicHears);
+bot.hears('🔄 Select mode', ga4.view('select mode '), selectModeHears);
 bot.hears('🏁 Finish & feedback', ga4.view('finish & feedback hears'), finishAndFeedbackHears);
 
 bot.on(message('voice'), ga4.view('user voice message'), messageVoiceOn);

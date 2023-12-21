@@ -1,10 +1,20 @@
 import { Markup } from 'telegraf';
 import { getRandomIndexes } from '../utils/utils.js';
 import { topics, ERROR_MESSAGE } from '../constants.js';
+import { mode } from '../constants.js';
+import { openAi } from '../services/openAiService.js';
 
 export default async (ctx) => {
   try {
-    const topicIndexes = getRandomIndexes(109, 3);
+    if (ctx.session.settings.mode !== mode.topic) {
+      ctx.session.messages = [];
+      ctx.session.messages.push({
+        role: openAi.roles.SYSTEM,
+        content: `Act as an English language teacher and my best friend. Let's practice some dialogues. Answer in the English language, with a maximum of 2 sentences. Ask a question at the end. Please write in emotional tone.`,
+      });
+      ctx.session.settings.mode = mode.topic;
+    }
+    const topicIndexes = getRandomIndexes(130, 3);
     if (ctx?.session?.settings?.topics) {
       ctx.session.settings.topics = [];
       for (const index of topicIndexes) {

@@ -49,6 +49,7 @@ export default async (ctx) => {
       ctx.session.feedback = JSON.parse(response.content);
       ctx.session.averagePronunciationScore = average(ctx.session.pronounseScores);
       ctx.session.averageGrammarScore = average(ctx.session.grammarScores);
+      ctx.sendChatAction('typing');
       await ctx.replyWithHTML(
         `<b>📊 Language level:</b> ${ctx.session.feedback.CEFR}\n<b>✏️ Grammar:</b> ${
           ctx.session.averageGrammarScore || '-'

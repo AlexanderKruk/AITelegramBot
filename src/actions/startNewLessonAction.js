@@ -1,5 +1,5 @@
 import setChatGptSettings from './setChatGptSettingsAction.js';
-import getTopic from './getTopicAction.js';
+import selectMode from './selectModeAction.js';
 import { Markup } from 'telegraf';
 import { ERROR_MESSAGE } from '../constants.js';
 
@@ -30,7 +30,7 @@ export default async (ctx) => {
       );
     } else {
       await setChatGptSettings(ctx);
-      await getTopic(ctx);
+      await selectMode(ctx);
     }
   } catch (error) {
     console.error('myOwnTopic: ', error.message);

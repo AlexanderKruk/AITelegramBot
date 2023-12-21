@@ -1,7 +1,7 @@
 import { Markup } from 'telegraf';
 import setChatGptSettings from './setChatGptSettingsAction.js';
-import getTopic from './getTopicAction.js';
 import { ERROR_MESSAGE } from '../constants.js';
+import selectMode from './selectModeAction.js';
 
 export default async (ctx) => {
   try {
@@ -11,7 +11,7 @@ export default async (ctx) => {
       parse_mode: 'HTML',
     });
     await setChatGptSettings(ctx);
-    await getTopic(ctx);
+    await selectMode(ctx);
   } catch (error) {
     console.log('canWeWriteNo error: ', error.message);
     await ctx.reply(ERROR_MESSAGE);

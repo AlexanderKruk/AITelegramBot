@@ -3,10 +3,14 @@ import { ERROR_MESSAGE, topics } from '../constants.js';
 import { Markup } from 'telegraf';
 import dailyUsage from '../helpers/dailyUsage.js';
 
-const getTopic = async (ctx) => {
+export default async (ctx) => {
   try {
     if (await dailyUsage(ctx)) return;
     const topicIndexes = getRandomIndexes(130, 3);
+    ctx.editMessageText('<b>Mode:</b> 🗂️ Topics', {
+      ...Markup.inlineKeyboard([[]]),
+      parse_mode: 'HTML',
+    });
     if (ctx?.session?.settings?.topics) {
       ctx.session.settings.topics = [];
       for (const index of topicIndexes) {
@@ -30,5 +34,3 @@ const getTopic = async (ctx) => {
     await ctx.reply(ERROR_MESSAGE);
   }
 };
-
-export default getTopic;

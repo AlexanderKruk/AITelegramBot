@@ -31,7 +31,7 @@ export default async (ctx) => {
             ),
           'openAi - transcript audio',
         );
-        const { message: response, cost: feedbackCost } = await logAsyncFunctionTime(
+        const { message: response, cost: checkPositionCost } = await logAsyncFunctionTime(
           () =>
             openAi.chat(
               {
@@ -52,6 +52,7 @@ export default async (ctx) => {
             ),
           'openAi - get job position',
         );
+        ctx.session.userData.dayCost += costTranscription + checkPositionCost;
         ctx.session.settings.interview = {};
         ctx.session.settings.interview = JSON.parse(response.content);
         if (ctx.session.settings?.interview?.isPosition) {

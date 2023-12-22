@@ -24,8 +24,8 @@ export default async (ctx) => {
           ),
         'openAi - hint',
       ));
-    ctx.session.userData.dayCost += hintCost;
-    await ctx.replyWithHTML(`<b>You can say:</b>\n${response.content}`);
+    ctx.session.userData.dayCost += hintCost || 0;
+    response && (await ctx.replyWithHTML(`<b>You can say:</b>\n${response.content}`));
   } catch (error) {
     console.log('Hint error: ', error.message);
     await ctx.reply(ERROR_MESSAGE);

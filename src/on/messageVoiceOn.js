@@ -99,6 +99,8 @@ export default async (ctx) => {
             ),
           'openAi - transcript audio',
         );
+        ctx.session.lastUserMessage ??= '';
+        ctx.session.lastUserMessage = text;
         const modifiedText = /[A-Za-z]$/.test(text) ? text + '.' : text;
         ctx.session.messages = cutLongTermMemory(ctx.session.messages, 16, 2);
         ctx.session.messages.push({ role: openAi.roles.USER, content: modifiedText });
@@ -195,6 +197,7 @@ export default async (ctx) => {
           await ctx.replyWithVoice(
             { source },
             Markup.keyboard([
+              [Markup.button.callback(`🌐 Translate`), Markup.button.callback(`✨ Improve`)],
               [Markup.button.callback(`🔤 Show text`), Markup.button.callback(`🆘 Hint please`)],
               [
                 Markup.button.callback(`🔄 Select mode`),

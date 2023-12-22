@@ -28,6 +28,7 @@ const selectTopic = async (ctx, index) => {
     await ctx.replyWithVoice(
       { source },
       Markup.keyboard([
+        [Markup.button.callback(`🌐 Translate`), Markup.button.callback(`✨ Improve`)],
         [Markup.button.callback(`🔤 Show text`), Markup.button.callback(`🆘 Hint please`)],
         [Markup.button.callback(`🔄 Select mode`), Markup.button.callback(`🏁 Finish & feedback`)],
       ]).resize(),

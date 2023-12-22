@@ -43,6 +43,7 @@ export default async (ctx) => {
       (await ctx.replyWithVoice(
         { source },
         Markup.keyboard([
+          [Markup.button.callback(`🌐 Translate`), Markup.button.callback(`✨ Improve`)],
           [Markup.button.callback(`🔤 Show text`), Markup.button.callback(`🆘 Hint please`)],
           [
             Markup.button.callback(`🔄 Select mode`),

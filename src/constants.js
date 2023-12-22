@@ -43,6 +43,7 @@ export const INITIAL_SESSION = {
   diffText: '',
   pronounce: {},
   lastResponse: '',
+  lastUserMessage: '',
   pronounseScores: [],
   grammarScores: [],
   averagePronunciationScore: 0,

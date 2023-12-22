@@ -15,6 +15,8 @@ import showPronounceDetailsAction from './actions/showPronounceDetailsAction.js'
 import showTextHears from './hears/showTextHears.js';
 import hintPleaseHears from './hears/hintPleaseHears.js';
 import selectModeHears from './hears/selectModeHears.js';
+import translateHears from './hears/translateHears.js';
+import improveHears from './hears/improveHears.js';
 import finishAndFeedbackHears from './hears/finishAndFeedbackHears.js';
 import messageVoiceOn from './on/messageVoiceOn.js';
 import messageTextOn from './on/messageTextOn.js';
@@ -56,6 +58,8 @@ bot.action('finishAndFeedback', ga4.view('finish & feedback action'), finishAndF
 bot.action('canWeWriteYes', ga4.view('write me yes'), canWeWriteYesAction);
 bot.action('canWeWriteNo', ga4.view('write me no'), canWeWriteNoAction);
 
+bot.hears('🌐 Translate', ga4.view('translate'), translateHears);
+bot.hears('✨ Improve', ga4.view('improve'), improveHears);
 bot.hears('🔤 Show text', ga4.view('show text'), showTextHears);
 bot.hears('🆘 Hint please', ga4.view('hint please'), hintPleaseHears);
 bot.hears('🔄 Select mode', ga4.view('select mode '), selectModeHears);

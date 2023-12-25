@@ -9,7 +9,7 @@ export default async (ctx) => {
     if (await dailyUsage(ctx)) return;
     if (ctx.session.userData.from.language_code === 'en') {
       await ctx.replyWithHTML(
-        `To get the translation, change Telegram's language from English to your native language.`,
+        `To get the translation, change Telegram's language from English to your native language and click /start`,
       );
       return;
     }

@@ -10,7 +10,7 @@ export default async (ctx) => {
       ctx.session.messages = [];
       ctx.session.messages.push({
         role: openAi.roles.SYSTEM,
-        content: `Act as an English language teacher and my best friend. Let's practice some dialogues. Answer in the English language, with a maximum of 2 sentences. Ask a question at the end. Please write in emotional tone.`,
+        content: `Act as an English language teacher and my best friend. Let's practice some dialogues. Sometimes ask questions. Expand my answers, suggest other solutions, tell similar stories or jokes. Please write in an emotional tone. Answer with a maximum of 2 sentences.`,
       });
       ctx.session.settings.mode = mode.topic;
     }

@@ -1,7 +1,7 @@
-import { mode } from '../constants.js';
+import { Markup } from 'telegraf';
+import { mode, ERROR_MESSAGE } from '../constants.js';
 import { openAi } from '../services/openAiService.js';
 import { textConverter } from '../services/textToSpeechService.js';
-import { Markup } from 'telegraf';
 
 export default async (ctx) => {
   try {
@@ -39,6 +39,7 @@ export default async (ctx) => {
       ctx.session.userData.dayCost += textToSpeechCost;
       ctx.session.settings.mode = mode.interviewPosition;
     }
+    // eslint-disable-next-line no-unused-expressions
     source &&
       (await ctx.replyWithVoice(
         { source },
@@ -51,5 +52,8 @@ export default async (ctx) => {
           ],
         ]).resize(),
       ));
-  } catch (error) {}
+  } catch (error) {
+    console.error('jobInterview error: ', error.message);
+    await ctx.reply(ERROR_MESSAGE);
+  }
 };

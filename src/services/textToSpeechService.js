@@ -1,10 +1,10 @@
-import { __dirname } from './audioConverterService.js';
 import config from 'config';
 import OpenAIApi from 'openai';
 import { prices } from '../constants.js';
 
 class TextConverter {
-  async textToSpeech(text, language) {
+  // eslint-disable-next-line class-methods-use-this
+  async textToSpeech(text) {
     try {
       const openai = new OpenAIApi({ apiKey: config.get('OPENAI_KEY') });
       const mp3 = await openai.audio.speech.create({
@@ -17,7 +17,9 @@ class TextConverter {
     } catch (error) {
       console.log('textToSpeech error', error.message);
     }
+    return null;
   }
 }
 
+// eslint-disable-next-line import/prefer-default-export
 export const textConverter = new TextConverter();

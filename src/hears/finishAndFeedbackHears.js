@@ -14,6 +14,7 @@ export default async (ctx) => {
       if (await dailyUsage(ctx)) return;
     }
     let userText = '';
+    // eslint-disable-next-line no-restricted-syntax
     for (const message of ctx.session.messages) {
       if (message.role === openAi.roles.USER) {
         userText += ` ${message.content}`;

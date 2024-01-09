@@ -1,12 +1,11 @@
-import { ERROR_MESSAGE } from '../constants.js';
+import { Markup } from 'telegraf';
+import { ERROR_MESSAGE, mode } from '../constants.js';
 import { openAi } from '../services/openAiService.js';
 import { ogg } from '../services/audioConverterService.js';
 import { pronounce } from '../services/pronounceService.js';
 import { textConverter } from '../services/textToSpeechService.js';
 import { diff, pronounceCorrect, cutLongTermMemory, logAsyncFunctionTime } from '../utils/utils.js';
-import { Markup } from 'telegraf';
 import dailyUsage from '../helpers/dailyUsage.js';
-import { mode } from '../constants.js';
 import jobInterviewAction from '../actions/jobInterviewAction.js';
 
 export default async (ctx) => {
@@ -57,10 +56,10 @@ export default async (ctx) => {
         ctx.session.settings.interview = JSON.parse(response.content);
         if (ctx.session.settings?.interview?.isPosition) {
           await ctx.replyWithHTML(
-            '<b>Position</b>: ' +
-              ctx.session.settings.interview.position.replace(/(^\w|\s\w)/g, (m) =>
-                m.toUpperCase(),
-              ),
+            `<b>Position</b>: ${ctx.session.settings.interview.position.replace(
+              /(^\w|\s\w)/g,
+              (m) => m.toUpperCase(),
+            )}`,
           );
           ctx.session.settings.mode = mode.interview;
           await jobInterviewAction(ctx);
@@ -75,6 +74,7 @@ export default async (ctx) => {
       case mode.scenario:
       case mode.topic: {
         ctx.sendChatAction('typing');
+        // eslint-disable-next-line no-unused-expressions
         ctx.session?.lastCheckMessage?.message_id &&
           (await ctx.telegram.editMessageText(
             ctx.chat.id,
@@ -101,7 +101,7 @@ export default async (ctx) => {
         );
         ctx.session.lastUserMessage ??= '';
         ctx.session.lastUserMessage = text;
-        const modifiedText = /[A-Za-z]$/.test(text) ? text + '.' : text;
+        const modifiedText = /[A-Za-z]$/.test(text) ? `${text}.` : text;
         ctx.session.messages = cutLongTermMemory(ctx.session.messages, 16, 2);
         ctx.session.messages.push({ role: openAi.roles.USER, content: modifiedText });
         ctx.sendChatAction('typing');
@@ -176,6 +176,7 @@ export default async (ctx) => {
           ]).resize(),
         );
       }
+      // eslint-disable-next-line no-fallthrough
       default: {
         try {
           ctx.sendChatAction('record_voice');
@@ -210,6 +211,7 @@ export default async (ctx) => {
           );
         } catch (error) {
           console.error('make audio error: ', error.message);
+          // eslint-disable-next-line no-unused-expressions
           !isError && (await ctx.reply(ERROR_MESSAGE));
         }
       }

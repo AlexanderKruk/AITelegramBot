@@ -8,6 +8,7 @@ export default async (ctx) => {
     ctx.sendChatAction('typing');
     if (await dailyUsage(ctx)) return;
     const { message: response, cost: hintCost } =
+      // eslint-disable-next-line no-unsafe-optional-chaining
       ctx?.session?.lastResponse &&
       (await logAsyncFunctionTime(
         () =>
@@ -25,6 +26,7 @@ export default async (ctx) => {
         'openAi - hint',
       ));
     ctx.session.userData.dayCost += hintCost || 0;
+    // eslint-disable-next-line no-unused-expressions
     response && (await ctx.replyWithHTML(`<b>You can say:</b>\n${response.content}`));
   } catch (error) {
     console.log('Hint error: ', error.message);

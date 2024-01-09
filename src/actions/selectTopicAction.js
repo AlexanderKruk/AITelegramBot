@@ -1,11 +1,13 @@
+import { Markup } from 'telegraf';
 import { openAi } from '../services/openAiService.js';
 import { textConverter } from '../services/textToSpeechService.js';
-import { Markup } from 'telegraf';
+import { ERROR_MESSAGE } from '../constants.js';
 
 const selectTopic = async (ctx, index) => {
   try {
     ctx.sendChatAction('record_voice');
     ctx.session.settings.selectedTopic = ctx.session.settings.topics[index];
+    // eslint-disable-next-line no-unused-expressions
     ctx?.session?.settings?.selectedTopic &&
       ctx.editMessageText(`<b>Topic:</b> ${ctx.session.settings.selectedTopic}`, {
         parse_mode: 'HTML',

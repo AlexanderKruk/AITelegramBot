@@ -5,38 +5,41 @@ import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { prices } from '../constants.js';
 
+// eslint-disable-next-line no-underscore-dangle
 export const __dirname = dirname(fileURLToPath(import.meta.url));
 
 class Pronounce {
-  constructor() {}
-
-  async getPronunciationAssessment(wavPath, reference_text, duration) {
+  // eslint-disable-next-line class-methods-use-this
+  async getPronunciationAssessment(wavPath, referenceText, duration) {
     try {
-      var audioConfig = sdk.AudioConfig.fromWavFileInput(fs.readFileSync(resolve(wavPath)));
-      var speechConfig = sdk.SpeechConfig.fromSubscription(
+      const audioConfig = sdk.AudioConfig.fromWavFileInput(fs.readFileSync(resolve(wavPath)));
+      const speechConfig = sdk.SpeechConfig.fromSubscription(
         config.get('MS_SUBSCRIPTION_KEY'),
         'germanywestcentral',
       );
       // create pronunciation assessment config, set grading system, granularity and if enable miscue based on your requirement.
+      // eslint-disable-next-line
       const pronunciationAssessmentConfig = new sdk.PronunciationAssessmentConfig.fromJSON(
+        // eslint-disable-next-line no-multi-str
         '{"GradingSystem": "HundredMark", \
               "Granularity": "Word", \
               "EnableMiscue": "False", \
               "EnableProsodyAssessment": "False"}',
       );
-      pronunciationAssessmentConfig.referenceText = reference_text;
+      pronunciationAssessmentConfig.referenceText = referenceText;
 
       // setting the recognition language to English.
       speechConfig.speechRecognitionLanguage = 'en-GB';
 
       // create the speech recognizer.
-      var reco = new sdk.SpeechRecognizer(speechConfig, audioConfig);
+      const reco = new sdk.SpeechRecognizer(speechConfig, audioConfig);
       pronunciationAssessmentConfig.applyTo(reco);
 
+      // eslint-disable-next-line no-inner-declarations
       function onRecognizedResult(result) {
         // console.log('pronunciation assessment for: ', reference_text);
         // console.log('pronunciation assessment for: ', result.text);
-        var pronunciation_result = sdk.PronunciationAssessmentResult.fromResult(result);
+        const pronunciationResult = sdk.PronunciationAssessmentResult.fromResult(result);
         // console.log(" Accuracy score: ", pronunciation_result.accuracyScore, '\n',
         //     "pronunciation score: ", pronunciation_result.pronunciationScore, '\n',
         //     "completeness score : ", pronunciation_result.completenessScore, '\n',
@@ -68,16 +71,16 @@ class Pronounce {
         // });
         reco.close();
         const pronounceScore = Math.round(
-          pronunciation_result.accuracyScore * 0.6 +
-            pronunciation_result.fluencyScore * 0.2 +
-            pronunciation_result.completenessScore * 0.2,
+          pronunciationResult.accuracyScore * 0.6 +
+            pronunciationResult.fluencyScore * 0.2 +
+            pronunciationResult.completenessScore * 0.2,
         );
         return {
           pronounceScore,
           pronounceText: result.text,
-          pronounceWords: pronunciation_result.detailResult.Words,
-          accuracyScore: pronunciation_result.accuracyScore,
-          fluencyScore: pronunciation_result.fluencyScore,
+          pronounceWords: pronunciationResult.detailResult.Words,
+          accuracyScore: pronunciationResult.accuracyScore,
+          fluencyScore: pronunciationResult.fluencyScore,
           cost: duration * prices['pronunciation-assessment'].audio,
         };
       }
@@ -86,15 +89,16 @@ class Pronounce {
       //   onRecognizedResult(successfulResult);
       // });
 
-      return new Promise((resolve, reject) => {
+      return new Promise((res, reject) => {
         reco.recognizeOnceAsync(
-          (successfulResult) => resolve(onRecognizedResult(successfulResult)),
+          (successfulResult) => res(onRecognizedResult(successfulResult)),
           (error) => reject(error.message),
         );
       });
     } catch (error) {
       console.log('getPronunciationAssessment error', error.message);
     }
+    return null;
   }
 }
 

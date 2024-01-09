@@ -74,4 +74,5 @@ export default async (ctx) => {
       return true;
     }
   }
+  return false;
 };

@@ -1,6 +1,6 @@
+import { Markup } from 'telegraf';
 import { getRandomIndexes } from '../utils/utils.js';
 import { ERROR_MESSAGE, topics } from '../constants.js';
-import { Markup } from 'telegraf';
 import dailyUsage from '../helpers/dailyUsage.js';
 
 export default async (ctx) => {
@@ -13,6 +13,7 @@ export default async (ctx) => {
     });
     if (ctx?.session?.settings?.topics) {
       ctx.session.settings.topics = [];
+      // eslint-disable-next-line no-restricted-syntax
       for (const index of topicIndexes) {
         ctx.session.settings.topics.push(topics[index]);
       }

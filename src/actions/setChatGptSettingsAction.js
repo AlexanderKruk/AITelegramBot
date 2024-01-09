@@ -1,4 +1,4 @@
-import { INITIAL_SESSION, ERROR_MESSAGE, userData } from '../constants.js';
+import { INITIAL_SESSION, userData, ERROR_MESSAGE } from '../constants.js';
 import { openAi } from '../services/openAiService.js';
 
 const setChatGptSettings = async (ctx) => {

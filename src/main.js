@@ -15,7 +15,6 @@ import showPronounceDetailsAction from './actions/showPronounceDetailsAction.js'
 import showTextHears from './hears/showTextHears.js';
 import hintPleaseHears from './hears/hintPleaseHears.js';
 import selectModeHears from './hears/selectModeHears.js';
-import translateHears from './hears/translateHears.js';
 import improveHears from './hears/improveHears.js';
 import finishAndFeedbackHears from './hears/finishAndFeedbackHears.js';
 import messageVoiceOn from './on/messageVoiceOn.js';
@@ -26,6 +25,7 @@ import canWeWriteNoAction from './actions/canWeWriteNoAction.js';
 import subscribeAction from './actions/subscribeAction.js';
 import jobInterviewAction from './actions/jobInterviewAction.js';
 import getTopicAction from './actions/getTopicAction.js';
+import translateHears from './hears/translatedHears.js';
 
 const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
 

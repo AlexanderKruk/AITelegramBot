@@ -1,7 +1,6 @@
 import { Markup } from 'telegraf';
 import { getRandomIndexes } from '../utils/utils.js';
-import { topics, ERROR_MESSAGE } from '../constants.js';
-import { mode } from '../constants.js';
+import { topics, ERROR_MESSAGE, mode } from '../constants.js';
 import { openAi } from '../services/openAiService.js';
 
 export default async (ctx) => {
@@ -17,6 +16,7 @@ export default async (ctx) => {
     const topicIndexes = getRandomIndexes(130, 3);
     if (ctx?.session?.settings?.topics) {
       ctx.session.settings.topics = [];
+      // eslint-disable-next-line no-restricted-syntax
       for (const index of topicIndexes) {
         ctx.session.settings.topics.push(topics[index]);
       }

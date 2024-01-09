@@ -12,9 +12,10 @@ export async function removeFile(path) {
 export function diff(one, other) {
   const allWords = one.split(' ').length;
   let errors = 0;
-  const diff = Diff.diffWords(one, other);
+  const diffWords = Diff.diffWords(one, other);
   let text = '';
-  for (const item of diff) {
+  // eslint-disable-next-line no-restricted-syntax
+  for (const item of diffWords) {
     if (item.added) {
       text += `<u>${item.value}</u>`;
       errors += 1;
@@ -32,6 +33,7 @@ export function diff(one, other) {
 export function pronounceCorrect(pronounceText = '', pronounceWords = []) {
   const returnWords = pronounceText.split(' ');
   let correctResult = '';
+  // eslint-disable-next-line no-restricted-syntax
   for (const [index, word] of pronounceWords.entries()) {
     if (word.PronunciationAssessment.AccuracyScore < 80) {
       correctResult += `<u>${returnWords[index]}</u> `;
@@ -48,9 +50,7 @@ export async function logAsyncFunctionTime(asyncFunction, functionName) {
     const result = await asyncFunction();
     const endTime = Date.now();
     const elapsedTime = endTime - startTime;
-    console.log(
-      `Function: ${functionName} - Processing Time: ${elapsedTime}ms`,
-    );
+    console.log(`Function: ${functionName} - Processing Time: ${elapsedTime}ms`);
     return result;
   } catch (error) {
     console.error(`Function: ${functionName} - Error: ${error.message}`);
@@ -69,16 +69,12 @@ export function getRandomIndexes(max, count) {
   return indexes;
 }
 
-export const cutLongTermMemory = (data = [], length, startFrom) => {
+export const cutLongTermMemory = (data, length, startFrom) => {
   const dataLength = data.length;
   if (dataLength > length - startFrom) {
-    return [
-      ...data.slice(0, startFrom),
-      ...data.slice((length - startFrom) * -1),
-    ];
+    return [...data.slice(0, startFrom), ...data.slice((length - startFrom) * -1)];
   }
   return data;
 };
 
-export const average = (arr = []) =>
-  Math.round(arr.reduce((p, c) => p + c, 0) / arr.length);
+export const average = (arr = []) => Math.round(arr.reduce((p, c) => p + c, 0) / arr.length);

@@ -30,8 +30,10 @@ class OpenAI {
     } catch (error) {
       console.log('openai chat error', error.message);
     }
+    return null;
   }
 
+  // eslint-disable-next-line class-methods-use-this
   transcriptionLanguage = (language) => {
     switch (language) {
       case 'american':
@@ -56,7 +58,9 @@ class OpenAI {
     } catch (error) {
       console.log('transcription error', error.message);
     }
+    return null;
   }
 }
 
+// eslint-disable-next-line import/prefer-default-export
 export const openAi = new OpenAI(config.get('OPENAI_KEY'));

@@ -13,6 +13,7 @@ export default async (ctx) => {
     }
     ctx.sendChatAction('typing');
     const { message: response, cost: improveCost } =
+      // eslint-disable-next-line no-unsafe-optional-chaining
       ctx?.session?.lastUserMessage &&
       (await logAsyncFunctionTime(
         () =>
@@ -30,6 +31,7 @@ export default async (ctx) => {
         'openAi - improve',
       ));
     ctx.session.userData.dayCost += improveCost || 0;
+    // eslint-disable-next-line no-unused-expressions
     response && (await ctx.replyWithHTML(`<b>Improvement:</b>\n${response.content}`));
   } catch (error) {
     console.error('Improve error: ', error.message);

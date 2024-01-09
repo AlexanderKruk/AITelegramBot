@@ -1,6 +1,6 @@
+import { Markup } from 'telegraf';
 import setChatGptSettings from './setChatGptSettingsAction.js';
 import selectMode from './selectModeAction.js';
-import { Markup } from 'telegraf';
 import { ERROR_MESSAGE } from '../constants.js';
 
 export default async (ctx) => {

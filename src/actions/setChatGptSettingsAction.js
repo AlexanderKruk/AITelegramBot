@@ -10,7 +10,7 @@ const setChatGptSettings = async (ctx) => {
     ctx.session.userData.from = ctx.from;
     ctx.session.messages.push({
       role: openAi.roles.SYSTEM,
-      content: `Act as an English language teacher and my best friend. Let's practice some dialogues. Answer in the English language, with a maximum of 2 sentences. Ask a question at the end. Please write in emotional tone.`,
+      content: `Act as an English teacher and my best friend. Let's practice some dialogues. Be proactive, sometimes ask questions. Expand my answers, suggest other solutions, tell interesting stories or jokes. Write in an emotional tone. Answer in no more than 2 sentences.`,
     });
   } catch (error) {
     console.error('setChatGptSettings: ', error.message);

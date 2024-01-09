@@ -1,11 +1,20 @@
 import { Markup } from 'telegraf';
 import { getRandomIndexes } from '../utils/utils.js';
-import { ERROR_MESSAGE, topics } from '../constants.js';
+import { ERROR_MESSAGE, topics, mode } from '../constants.js';
 import dailyUsage from '../helpers/dailyUsage.js';
+import { openAi } from '../services/openAiService.js';
 
 export default async (ctx) => {
   try {
     if (await dailyUsage(ctx)) return;
+    if (ctx.session.settings.mode !== mode.topic) {
+      ctx.session.messages = [];
+      ctx.session.messages.push({
+        role: openAi.roles.SYSTEM,
+        content: `Act as an English teacher and my best friend. Let's practice some dialogues. Be proactive, sometimes ask questions. Expand my answers, suggest other solutions, tell interesting stories or jokes. Write in an emotional tone. Answer in no more than 2 sentences.`,
+      });
+      ctx.session.settings.mode = mode.topic;
+    }
     const topicIndexes = getRandomIndexes(130, 3);
     ctx.editMessageText('<b>Mode:</b> 🗂️ Topics', {
       ...Markup.inlineKeyboard([[]]),

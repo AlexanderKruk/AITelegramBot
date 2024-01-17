@@ -44,10 +44,16 @@ export function pronounceCorrect(pronounceText = '', pronounceWords = []) {
   return correctResult;
 }
 
-export async function logAsyncFunctionTime(asyncFunction, functionName) {
+export async function logAsyncFunctionTime(asyncFunction, functionName, timeoutMillis = 20000) {
   const startTime = Date.now();
   try {
-    const result = await asyncFunction();
+    const timeoutPromise = new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        clearTimeout(timeoutId);
+        reject(new Error(`Promise timed out after ${timeoutMillis} milliseconds`));
+      }, timeoutMillis);
+    });
+    const result = await Promise.race([asyncFunction(), timeoutPromise]);
     const endTime = Date.now();
     const elapsedTime = endTime - startTime;
     console.log(`Function: ${functionName} - Processing Time: ${elapsedTime}ms`);

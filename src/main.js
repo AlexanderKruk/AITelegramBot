@@ -26,6 +26,7 @@ import subscribeAction from './actions/subscribeAction.js';
 import jobInterviewAction from './actions/jobInterviewAction.js';
 import getTopicAction from './actions/getTopicAction.js';
 import translateHears from './hears/translatedHears.js';
+import scenariosAction from './actions/scenariosAction.js';
 
 const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
 
@@ -43,6 +44,7 @@ bot.command('subscribe', ga4.view('subscribe'), subscribeAction);
 bot.action('getTopic', ga4.view('get topic'), getTopicAction);
 bot.action('changeTopics', ga4.view('topics change'), changeTopicsAction);
 bot.action('jobInterview', ga4.view('job interview'), jobInterviewAction);
+bot.action('scenarios', ga4.view('scenario'), scenariosAction);
 bot.action('selectTopic0', ga4.view('topic selected'), selectTopic0Action);
 bot.action('selectTopic1', ga4.view('topic selected'), selectTopic1Action);
 bot.action('selectTopic2', ga4.view('topic selected'), selectTopic2Action);

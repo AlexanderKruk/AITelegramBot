@@ -7,9 +7,9 @@ const selectMode = async (ctx) => {
     if (await dailyUsage(ctx)) return;
     await ctx.reply('Select mode:              &#x200D;', {
       ...Markup.inlineKeyboard([
+        [Markup.button.callback('🎭 Scenarios', 'scenarios')],
         [Markup.button.callback('🗂️ Topics', 'getTopic')],
         [Markup.button.callback('💼 Job interview', 'jobInterview')],
-        // [Markup.button.callback('🎭 Scenarios', 'selectTopic2')],
       ]),
       parse_mode: 'HTML',
     });

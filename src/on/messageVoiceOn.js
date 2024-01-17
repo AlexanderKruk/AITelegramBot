@@ -162,18 +162,32 @@ export default async (ctx) => {
         ctx.session.lastCheckMessage = {};
         ctx.session.lastCheckMessage = await ctx.replyWithHTML(
           `<b>Your message:</b>\n${text}`,
-          Markup.inlineKeyboard([
-            [
-              Markup.button.callback(
-                `🎙 ${ctx.session?.pronounce?.pronounceScore || '-'}%`,
-                'showPronounceDetails',
-              ),
-              Markup.button.callback(
-                `✏️ ${ctx.session?.grammarScore || '-'}%`,
-                'showGrammarDetails',
-              ),
-            ],
-          ]).resize(),
+          ctx.session.settings.mode === mode.scenario
+            ? Markup.inlineKeyboard([
+                [
+                  Markup.button.callback(`🎯 0/4`, 'empty'),
+                  Markup.button.callback(
+                    `✏️ ${ctx.session?.grammarScore || '-'}%`,
+                    'showGrammarDetails',
+                  ),
+                  Markup.button.callback(
+                    `🎙 ${ctx.session?.pronounce?.pronounceScore || '-'}%`,
+                    'showPronounceDetails',
+                  ),
+                ],
+              ]).resize()
+            : Markup.inlineKeyboard([
+                [
+                  Markup.button.callback(
+                    `✏️ ${ctx.session?.grammarScore || '-'}%`,
+                    'showGrammarDetails',
+                  ),
+                  Markup.button.callback(
+                    `🎙 ${ctx.session?.pronounce?.pronounceScore || '-'}%`,
+                    'showPronounceDetails',
+                  ),
+                ],
+              ]).resize(),
         );
       }
       // eslint-disable-next-line no-fallthrough
@@ -181,6 +195,9 @@ export default async (ctx) => {
         try {
           ctx.sendChatAction('record_voice');
           if (await dailyUsage(ctx)) return;
+          if (!globalResponse || !globalResponse.content) {
+            throw new Error('globalResponse.content empty');
+          }
           ctx.session.messages.push({
             role: openAi.roles.ASSISTANT,
             content: globalResponse.content,
@@ -188,7 +205,7 @@ export default async (ctx) => {
           const { mp3: source, cost: textToSpeechCost } = await logAsyncFunctionTime(
             () =>
               textConverter.textToSpeech(
-                `${globalResponse.content || ''}`,
+                `${globalResponse.content}`,
                 ctx.session.settings.practiceLanguage,
               ),
             'openAi - text to speech',

@@ -73,6 +73,29 @@ export const prices = {
 
 export const ERROR_MESSAGE = 'Ooops. Please try again or /start.';
 
+export const scenarios = [
+  {
+    title: 'First day of class',
+    description:
+      'You are studying at an American university. When you entered the classroom on the first day of class, a friendly student sat next you and started talking to you.',
+    prompt:
+      'Scenario: Your name is Alex. You are an outgoing, sociable student at an American university. Spotting a new face in class today, you decide to make them feel welcome by striking up a conversation and introducing yourself.',
+    goals: [
+      'Introduce yourself to your classmate and make a small talk.',
+      'Talk about where you are from and what you study.',
+      'Tell the student that he or she looks prepared for class.',
+      'Ask the student if he or she has any advice about the class.',
+    ],
+    hints: [
+      'Where are you from?',
+      'What do you study?',
+      "I'm majoring in Biology.",
+      "It looks like you're really organized.",
+      'See you around!',
+    ],
+  },
+];
+
 export const topics = [
   '🤖 Future of AI',
   '🌍 Climate change',

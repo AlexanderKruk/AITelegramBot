@@ -34,6 +34,8 @@ export const userData = {
   canWeWrite: null,
   userTextMessages: 0,
   userAudioMessages: 0,
+  scenarioGoals: {},
+  currentScenariosPage: 1,
 };
 
 export const INITIAL_SESSION = {
@@ -49,6 +51,9 @@ export const INITIAL_SESSION = {
   averagePronunciationScore: 0,
   averageGrammarScore: 0,
   userData,
+  currentScenarioIndex: 0,
+  currentScenarioGoals: [false, false, false, false],
+  maxScenariosPage: 2,
 };
 
 export const prices = {
@@ -75,13 +80,13 @@ export const ERROR_MESSAGE = 'Ooops. Please try again or /start.';
 
 export const scenarios = [
   {
-    title: 'First day of class',
+    title: '🧑‍🎓️ First day of class',
     description:
       'You are studying at an American university. When you entered the classroom on the first day of class, a friendly student sat next you and started talking to you.',
     prompt:
-      'Scenario: Your name is Alex. You are an outgoing, sociable student at an American university. Spotting a new face in class today, you decide to make them feel welcome by striking up a conversation and introducing yourself.',
+      'Your name is Alex. You are an outgoing, sociable student at an American university. Spotting a new face in class today, you decide to make them feel welcome by striking up a conversation and introducing yourself.',
     goals: [
-      'Introduce yourself to your classmate and make a small talk.',
+      'Introduce yourself to your classmate.',
       'Talk about where you are from and what you study.',
       'Tell the student that he or she looks prepared for class.',
       'Ask the student if he or she has any advice about the class.',
@@ -92,6 +97,145 @@ export const scenarios = [
       "I'm majoring in Biology.",
       "It looks like you're really organized.",
       'See you around!',
+    ],
+  },
+  {
+    title: '🍕 Order pizza delivery',
+    description: 'You are coming to New York. Call the pizzeria and ask for pizza delivery.',
+    prompt:
+      "You are the pizzeria owner in New York. You answer a customer's phone call about a pizza order.",
+    goals: [
+      'Place an order for delivery.',
+      "Make sure there's no onion on your pizza.",
+      'Ask about delivery time',
+      'Ask for appetizer recommendation.',
+    ],
+    hints: [
+      "I'd like to order a pizza for delivery.",
+      'No onion, please.',
+      'Do you have any specials?',
+      'What appetizers would you recommend?',
+      'How long will that take?',
+    ],
+  },
+  {
+    title: '🍣 Sushi party with colleagues',
+    description:
+      'On Friday night, your colleagues and you decided to meet at a sushi restaurant. Call the store, talk to the store manager, and reserve a seat.',
+    prompt:
+      'As the store manager at a sushi restaurant, answer the call promptly and assist the customer with their reservation request. Ensure to inquire about the number of people in the party and ask if there are any special accommodations that might be needed. Provide a warm confirmation and let them know you look forward to welcoming them to the establishment.',
+    goals: [
+      'Make a dinner reservation',
+      'Ask if they have any availability for Friday at 6pm.',
+      'Ask if they have a table for 6 to 8 people.',
+      'Ask what kind of beer or sake they offer.',
+    ],
+    hints: [
+      "I'd like to make a reservation.",
+      'Do you have any availability for Friday at 6pm?',
+      'Do you have a table for 8 people?',
+      'What kind of beer and sake do you have?',
+      'Looking forward to it!',
+    ],
+  },
+  {
+    title: '🛎 Long stay hotel',
+    description:
+      "You're going to Orlando, Florida on a business trip for 3 weeks and decided to stay at an extended stay hotel. Arrive at the lobby and check-in.",
+    prompt:
+      "You work at the front desk of an extended stay hotel in Orlando, Florida. A guest has just walked in, presumably here on a business trip. Greet the guest warmly, check them in, and inform them about the hotel's amenities.",
+    goals: [
+      'Check-in to your hotel room.',
+      'Ask if room service is available or there is a kitchen in the hotel room.',
+      'Ask if there is a convenience store or gas station nearby.',
+      'Ask about shared workplaces in the hotel and ask for the wifi password.',
+    ],
+    hints: [
+      "Hi, I'd like to check in, please.",
+      'Do the rooms have kitchens or is there a room service?',
+      'Is there a gas station or a convenience store nearby?',
+      'Are there any workspaces here?',
+      "What's the wifi password?",
+    ],
+  },
+  {
+    title: '🏘️ Neighbour',
+    description:
+      'You just moved into an apartment in New York. When you go outside, you bumped into someone in the next room.',
+    prompt:
+      "You've been living in this New York apartment building for a few years and know the ins and outs. As you hurry out to grab a morning coffee, you collide with your new neighbor, who seems a bit disoriented.",
+    goals: [
+      'Meet your neighbor',
+      'Talk about where you are from and what you do.',
+      'Tell your neighbour you like her shoes.',
+      'Ask the neighbour what she think about the neighbourhood',
+    ],
+    hints: [
+      'Hi, nice to finally meet you!',
+      'I just moved here from Seoul to study English.',
+      'Your shoes are awesome, but the way.',
+      'Do you like living in this neighbourhood?',
+      "Any cool spots you'd recommend?",
+    ],
+  },
+  {
+    title: '💼 Talk about new job',
+    description:
+      "You've just got a new job. You want to talk to your friend, so you meet her at the coffee shop after work.",
+    prompt:
+      "You're the friend who's eager to hear about my first day at work. You're already at the coffee shop, sipping your favorite drink, preparing to celebrate your friend's new beginning.",
+    goals: [
+      'Share your experience of your new job.',
+      'Describe your daily routine.',
+      'Explain why you chose this job.',
+      'Talk about one of your co-workers.',
+    ],
+    hints: [
+      'I just started a new job.',
+      "I'm really excited about it.",
+      'I chose this job because I wanted to try something new.',
+      'My day usually looks like this.',
+      'I have this one coworker who I really connect with.',
+    ],
+  },
+  {
+    title: '🏦 Open a bank account',
+    description:
+      'You are opening a new savings account at the local bank. You sit across from the bank clerk.',
+    prompt:
+      "You are the bank clerk, and you're assisting me with setting up a new savings account. You are explaining the different interest rates and benefits that come with the account.",
+    goals: [
+      'Open a savings account.',
+      'Understand the fees associated with the account.',
+      'Ask about promotional offers for new accounts.',
+      'Deposit money in the account.',
+    ],
+    hints: [
+      'Can you tell me about your checking accounts?',
+      'What kind of free does this account have?',
+      'Do you have any promotional offers?',
+      'Can I deposit money in the account right now?',
+      'Thank you for your help today.',
+    ],
+  },
+  {
+    title: '👫 A new friend',
+    description:
+      "You were invited to a friend's party in San Francisco. You were introduced to a new person. Let's talk a lot to get to know each other.",
+    prompt:
+      "You are at a social gathering in San Francisco. A mutual friend has just introduced you to someone new. You're curious to learn more about them, so you decide to engage in conversation and share some interesting facts about yourself.",
+    goals: [
+      'Introduce yourself.',
+      'Ask if your new friend likes San Francisco.',
+      'Talk about your hometown and job in detail.',
+      'Ask your new friend for a good picnic spot in San Francisco.',
+    ],
+    hints: [
+      'So, tell me about yourself!',
+      'Are you from around here?',
+      'Do you like living in San Francisco?',
+      'What do you do for work?',
+      'Can you recommend a good picnic spot?',
     ],
   },
 ];

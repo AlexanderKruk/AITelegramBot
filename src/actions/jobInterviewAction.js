@@ -27,7 +27,7 @@ export default async (ctx) => {
       source = mp3;
       ctx.session.userData.dayCost += answerCost + textToSpeechCost;
     } else {
-      ctx.editMessageText('<b>Mode:</b> 💼 Job interview', {
+      ctx.editMessageText('💼 Job interview', {
         ...Markup.inlineKeyboard([[]]),
         parse_mode: 'HTML',
       });
@@ -46,10 +46,7 @@ export default async (ctx) => {
         Markup.keyboard([
           [Markup.button.callback(`🌐 Translate`), Markup.button.callback(`✨ Improve`)],
           [Markup.button.callback(`🔤 Show text`), Markup.button.callback(`🆘 Hint please`)],
-          [
-            Markup.button.callback(`🔄 Select mode`),
-            Markup.button.callback(`🏁 Finish & feedback`),
-          ],
+          [Markup.button.callback(`🆕 New dialog`), Markup.button.callback(`🏁 Finish & feedback`)],
         ]).resize(),
       ));
   } catch (error) {

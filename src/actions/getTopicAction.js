@@ -16,10 +16,6 @@ export default async (ctx) => {
       ctx.session.settings.mode = mode.topic;
     }
     const topicIndexes = getRandomIndexes(130, 3);
-    ctx.editMessageText('<b>Mode:</b> 🗂️ Topics', {
-      ...Markup.inlineKeyboard([[]]),
-      parse_mode: 'HTML',
-    });
     if (ctx?.session?.settings?.topics) {
       ctx.session.settings.topics = [];
       // eslint-disable-next-line no-restricted-syntax
@@ -27,7 +23,7 @@ export default async (ctx) => {
         ctx.session.settings.topics.push(topics[index]);
       }
     }
-    await ctx.reply('What do you want to talk about?             &#x200D;', {
+    await ctx.editMessageText('What do you want to talk about?             &#x200D;', {
       ...Markup.inlineKeyboard([
         [Markup.button.callback(ctx.session.settings.topics[0], 'selectTopic0')],
         [Markup.button.callback(ctx.session.settings.topics[1], 'selectTopic1')],

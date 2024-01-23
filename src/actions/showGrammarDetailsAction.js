@@ -9,7 +9,12 @@ export default async (ctx) => {
         ? {
             ...Markup.inlineKeyboard([
               [
-                Markup.button.callback(`🎯 0/4`, 'empty'),
+                Markup.button.callback(
+                  `🎯 ${
+                    ctx.session?.currentScenarioGoals.filter((item) => item === true).length
+                  }/4`,
+                  'showGoalsDetails',
+                ),
                 Markup.button.callback(`✏️ ${ctx.session.grammarScore}%`, 'empty'),
                 Markup.button.callback(
                   `🎙 ${ctx.session.pronounce.pronounceScore}%`,

@@ -5,7 +5,7 @@ export default async (ctx) => {
   try {
     await selectTopic(ctx, 0);
   } catch (error) {
-    console.error('selectTopic0: ', error.message);
+    console.error('selectTopic0 error: ', error.message);
     await ctx.reply(ERROR_MESSAGE);
   }
 };

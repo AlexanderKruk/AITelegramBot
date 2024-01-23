@@ -1,5 +1,7 @@
 import { unlink } from 'fs/promises';
+import { Markup } from 'telegraf';
 import * as Diff from 'diff';
+import { scenarios } from '../constants.js';
 
 export async function removeFile(path) {
   try {
@@ -81,6 +83,22 @@ export const cutLongTermMemory = (data, length, startFrom) => {
     return [...data.slice(0, startFrom), ...data.slice((length - startFrom) * -1)];
   }
   return data;
+};
+
+export const calculateScenariosMenuButtons = (ctx) => {
+  const buttons = [];
+  for (let i = 0; i < 4; i += 1) {
+    const index = i + (ctx.session.userData.currentScenariosPage - 1) * 4;
+    buttons.push([
+      Markup.button.callback(
+        `${scenarios[index].title} (${
+          ctx.session.userData?.scenarioGoals[index]?.filter((item) => item === true).length || 0
+        }/4)`,
+        `selectScenario${i}`,
+      ),
+    ]);
+  }
+  return buttons;
 };
 
 export const average = (arr = []) => Math.round(arr.reduce((p, c) => p + c, 0) / arr.length);

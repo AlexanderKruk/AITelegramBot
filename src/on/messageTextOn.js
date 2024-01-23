@@ -148,7 +148,7 @@ export default async (ctx) => {
 //         Markup.keyboard([
 //           [Markup.button.callback(`🆘 Hint please`)],
 //           [
-//             Markup.button.callback(`🔄 Select mode`),
+//             Markup.button.callback(`🆕 New dialog`),
 //             Markup.button.callback(`🏁 Finish & feedback`),
 //           ],
 //         ]).resize(),

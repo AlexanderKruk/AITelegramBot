@@ -32,11 +32,11 @@ const selectTopic = async (ctx, index) => {
       Markup.keyboard([
         [Markup.button.callback(`🌐 Translate`), Markup.button.callback(`✨ Improve`)],
         [Markup.button.callback(`🔤 Show text`), Markup.button.callback(`🆘 Hint please`)],
-        [Markup.button.callback(`🔄 Select mode`), Markup.button.callback(`🏁 Finish & feedback`)],
+        [Markup.button.callback(`🆕 New dialog`), Markup.button.callback(`🏁 Finish & feedback`)],
       ]).resize(),
     );
   } catch (error) {
-    console.error('selectTopic: ', error.message);
+    console.error('selectTopic error ', error.message);
     await ctx.reply(ERROR_MESSAGE);
   }
 };

@@ -1,12 +1,20 @@
 import { openAi } from '../services/openAiService.js';
 import { logAsyncFunctionTime } from '../utils/utils.js';
-import { ERROR_MESSAGE } from '../constants.js';
+import { ERROR_MESSAGE, mode, scenarios } from '../constants.js';
 import dailyUsage from '../helpers/dailyUsage.js';
 
 export default async (ctx) => {
   try {
     ctx.sendChatAction('typing');
     if (await dailyUsage(ctx)) return;
+    if (ctx.session.settings.mode === mode.scenario) {
+      await ctx.replyWithHTML(
+        `<b>You can say:</b>\n${scenarios[ctx.session?.currentScenarioIndex || 0].hints
+          .map((item) => `- ${item}`)
+          .join('\n')}`,
+      );
+      return;
+    }
     const { message: response, cost: hintCost } =
       // eslint-disable-next-line no-unsafe-optional-chaining
       ctx?.session?.lastResponse &&

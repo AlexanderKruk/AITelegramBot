@@ -1,5 +1,5 @@
 import { Markup } from 'telegraf';
-import { ERROR_MESSAGE, mode } from '../constants.js';
+import { ERROR_MESSAGE, mode, scenarios } from '../constants.js';
 import { openAi } from '../services/openAiService.js';
 import { ogg } from '../services/audioConverterService.js';
 import { pronounce } from '../services/pronounceService.js';
@@ -10,7 +10,6 @@ import jobInterviewAction from '../actions/jobInterviewAction.js';
 
 export default async (ctx) => {
   let globalResponse;
-  let isError = false;
   try {
     ctx.session.userData.userAudioMessages ??= 0;
     ctx.session.userData.userAudioMessages += 1;
@@ -105,45 +104,147 @@ export default async (ctx) => {
         ctx.session.messages = cutLongTermMemory(ctx.session.messages, 16, 2);
         ctx.session.messages.push({ role: openAi.roles.USER, content: modifiedText });
         ctx.sendChatAction('typing');
-        const [
-          {
-            pronounceScore,
-            pronounceText,
-            pronounceWords,
-            accuracyScore,
-            fluencyScore,
-            cost: costPronounce,
-          },
-          { message: grammar, cost: costGrammar },
-          { message: response, cost: costAnswer },
-        ] = await Promise.all([
-          logAsyncFunctionTime(
-            () =>
-              pronounce.getPronunciationAssessment(
-                wavPath,
-                modifiedText,
-                ctx.message.voice.duration,
-              ),
-            'microsoft - pronounce assasment',
-          ),
-          logAsyncFunctionTime(
-            () =>
-              openAi.chat(
-                {
-                  messages: [
-                    {
-                      role: openAi.roles.SYSTEM,
-                      content: `It is English. Correct my spelling and grammar. Return text in quotes. Text: "${modifiedText}"`,
-                    },
-                  ],
-                }.messages,
-              ),
-            'openAi - check grammar',
-          ),
-          logAsyncFunctionTime(() => openAi.chat(ctx.session.messages), 'openAi - make answer'),
-        ]);
+
+        let pronounceScore;
+        let pronounceText;
+        let pronounceWords;
+        let accuracyScore;
+        let fluencyScore;
+        let costPronounce;
+        let grammar;
+        let response;
+        let costGrammar;
+        let costAnswer;
+        let goalsAndGrammar;
+        let costGoalsAndGrammar;
+        let textGoalsAchived;
+
+        if (ctx.session.settings.mode === mode.scenario) {
+          [
+            {
+              pronounceScore,
+              pronounceText,
+              pronounceWords,
+              accuracyScore,
+              fluencyScore,
+              cost: costPronounce,
+            },
+            { message: goalsAndGrammar = 0, cost: costGoalsAndGrammar },
+            { message: grammar, cost: costGrammar = 0 },
+            { message: response, cost: costAnswer },
+          ] = await Promise.all([
+            logAsyncFunctionTime(
+              () =>
+                pronounce.getPronunciationAssessment(
+                  wavPath,
+                  modifiedText,
+                  ctx.message.voice.duration,
+                ),
+              'microsoft - pronounce assasment',
+            ),
+            logAsyncFunctionTime(
+              () =>
+                openAi.chat(
+                  {
+                    messages: [
+                      {
+                        role: openAi.roles.SYSTEM,
+                        content: `Act as an English teacher and check what goals I achieved. JSON format, field goals: true or false array. Scenario: ${
+                          scenarios[0].description
+                        } Goals: ${scenarios[ctx.session.currentScenarioIndex].goals
+                          .map((item, index) => `${index + 1}. ${item}`)
+                          .join(' ')}`,
+                      },
+                      {
+                        role: openAi.roles.USER,
+                        content: modifiedText,
+                      },
+                    ],
+                  }.messages,
+                  'gpt-4-1106-preview',
+                  'json_object',
+                ),
+              'openAi - check goals and grammar',
+            ),
+            logAsyncFunctionTime(
+              () =>
+                openAi.chat(
+                  {
+                    messages: [
+                      {
+                        role: openAi.roles.SYSTEM,
+                        content: `It is English. Correct my spelling and grammar. Return text in quotes. Text: "${modifiedText}"`,
+                      },
+                    ],
+                  }.messages,
+                ),
+              'openAi - check grammar',
+            ),
+            logAsyncFunctionTime(() => openAi.chat(ctx.session.messages), 'openAi - make answer'),
+          ]);
+          const jsonGoalsAndGrammar = JSON.parse(goalsAndGrammar.content);
+          if (jsonGoalsAndGrammar?.goals) {
+            const { length } = jsonGoalsAndGrammar.goals;
+            textGoalsAchived = '';
+            if (!(ctx.session.currentScenarioIndex in ctx.session.userData.scenarioGoals)) {
+              ctx.session.userData.scenarioGoals[ctx.session.currentScenarioIndex] = [
+                false,
+                false,
+                false,
+                false,
+              ];
+            }
+            for (let i = 0; i < length; i += 1) {
+              if (jsonGoalsAndGrammar.goals[i] && !ctx.session.currentScenarioGoals[i]) {
+                ctx.session.currentScenarioGoals[i] = true;
+                ctx.session.userData.scenarioGoals[ctx.session.currentScenarioIndex][i] = true;
+                textGoalsAchived += textGoalsAchived
+                  ? `\n🎉 ${scenarios[ctx.session.currentScenarioIndex].goals[i]}`
+                  : `🎉 ${scenarios[ctx.session.currentScenarioIndex].goals[i]}`;
+              }
+            }
+          }
+        } else {
+          [
+            {
+              pronounceScore,
+              pronounceText,
+              pronounceWords,
+              accuracyScore,
+              fluencyScore,
+              cost: costPronounce,
+            },
+            { message: grammar, cost: costGrammar },
+            { message: response, cost: costAnswer },
+          ] = await Promise.all([
+            logAsyncFunctionTime(
+              () =>
+                pronounce.getPronunciationAssessment(
+                  wavPath,
+                  modifiedText,
+                  ctx.message.voice.duration,
+                ),
+              'microsoft - pronounce assasment',
+            ),
+            logAsyncFunctionTime(
+              () =>
+                openAi.chat(
+                  {
+                    messages: [
+                      {
+                        role: openAi.roles.SYSTEM,
+                        content: `It is English. Correct my spelling and grammar. Return text in quotes. Text: "${modifiedText}"`,
+                      },
+                    ],
+                  }.messages,
+                ),
+              'openAi - check grammar',
+            ),
+            logAsyncFunctionTime(() => openAi.chat(ctx.session.messages), 'openAi - make answer'),
+          ]);
+        }
         ctx.session.userData.dayCost +=
-          costTranscription + costPronounce + costGrammar + costAnswer;
+          costTranscription + costPronounce + (costGrammar || costGoalsAndGrammar) + costAnswer;
         globalResponse = response;
         ctx.sendChatAction('typing');
         const corrected = grammar?.content?.match(/.*"([^"]+)"/)[0].slice(1, -1) || '';
@@ -165,7 +266,12 @@ export default async (ctx) => {
           ctx.session.settings.mode === mode.scenario
             ? Markup.inlineKeyboard([
                 [
-                  Markup.button.callback(`🎯 0/4`, 'empty'),
+                  Markup.button.callback(
+                    `🎯 ${
+                      ctx.session?.currentScenarioGoals.filter((item) => item === true).length
+                    }/4`,
+                    'showGoalsDetails',
+                  ),
                   Markup.button.callback(
                     `✏️ ${ctx.session?.grammarScore || '-'}%`,
                     'showGrammarDetails',
@@ -189,52 +295,49 @@ export default async (ctx) => {
                 ],
               ]).resize(),
         );
+        if (textGoalsAchived) {
+          await ctx.reply(textGoalsAchived);
+        }
       }
       // eslint-disable-next-line no-fallthrough
       default: {
-        try {
-          ctx.sendChatAction('record_voice');
-          if (await dailyUsage(ctx)) return;
-          if (!globalResponse || !globalResponse.content) {
-            throw new Error('globalResponse.content empty');
-          }
-          ctx.session.messages.push({
-            role: openAi.roles.ASSISTANT,
-            content: globalResponse.content,
-          });
-          const { mp3: source, cost: textToSpeechCost } = await logAsyncFunctionTime(
-            () =>
-              textConverter.textToSpeech(
-                `${globalResponse.content}`,
-                ctx.session.settings.practiceLanguage,
-              ),
-            'openAi - text to speech',
-          );
-          ctx.session.userData.dayCost += textToSpeechCost;
-          ctx.session.lastResponse = globalResponse.content;
-          await ctx.replyWithVoice(
-            { source },
-            Markup.keyboard([
-              [Markup.button.callback(`🌐 Translate`), Markup.button.callback(`✨ Improve`)],
-              [Markup.button.callback(`🔤 Show text`), Markup.button.callback(`🆘 Hint please`)],
-              [
-                Markup.button.callback(`🔄 Select mode`),
-                Markup.button.callback(`🏁 Finish & feedback`),
-              ],
-            ]).resize(),
-          );
-          console.log(
-            '=============================================================================',
-          );
-        } catch (error) {
-          console.error('make audio error: ', error.message);
-          // eslint-disable-next-line no-unused-expressions
-          !isError && (await ctx.reply(ERROR_MESSAGE));
+        ctx.sendChatAction('record_voice');
+        if (await dailyUsage(ctx)) return;
+        if (!globalResponse || !globalResponse.content) {
+          throw new Error('globalResponse.content empty');
         }
+        ctx.session.messages.push({
+          role: openAi.roles.ASSISTANT,
+          content: globalResponse.content,
+        });
+        const { mp3: source, cost: textToSpeechCost } = await logAsyncFunctionTime(
+          () =>
+            textConverter.textToSpeech(
+              `${globalResponse.content}`,
+              ctx.session.settings.practiceLanguage,
+            ),
+          'openAi - text to speech',
+        );
+        ctx.session.userData.dayCost += textToSpeechCost;
+        ctx.session.lastResponse = globalResponse.content;
+        await ctx.replyWithVoice(
+          { source },
+          Markup.keyboard([
+            [Markup.button.callback(`🌐 Translate`), Markup.button.callback(`✨ Improve`)],
+            [Markup.button.callback(`🔤 Show text`), Markup.button.callback(`🆘 Hint please`)],
+            [
+              Markup.button.callback(`🆕 New dialog`),
+              Markup.button.callback(`🏁 Finish & feedback`),
+            ],
+          ]).resize(),
+        );
+        console.log(
+          '=============================================================================',
+        );
       }
     }
   } catch (error) {
-    isError = true;
+    ctx.session.lastCheckMessage = {};
     console.error('check user message error: ', error.message);
     await ctx.reply(ERROR_MESSAGE);
   }

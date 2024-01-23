@@ -1,17 +1,26 @@
 import { Markup } from 'telegraf';
-import { mode, ERROR_MESSAGE } from '../constants.js';
+import { mode, ERROR_MESSAGE, scenarios } from '../constants.js';
 import { openAi } from '../services/openAiService.js';
 import { textConverter } from '../services/textToSpeechService.js';
 
-export default async (ctx) => {
+const selectScenarios = async (ctx, index) => {
   try {
     let source = null;
     ctx.session.settings.mode = mode.scenario;
     ctx.session.messages = [];
+    ctx.session.currentScenarioIndex = index + (ctx.session.userData.currentScenariosPage - 1) * 4;
+    await ctx.editMessageText(
+      `<b>${scenarios[ctx.session.currentScenarioIndex].title}</b>\n${
+        scenarios[ctx.session.currentScenarioIndex].description
+      }\n\n<b>🎯</b> ${scenarios[ctx.session.currentScenarioIndex].goals[0]}`,
+      {
+        parse_mode: 'HTML',
+      },
+    );
     ctx.session.messages.push({
       role: openAi.roles.SYSTEM,
       content: `Act as an English language teacher and my best friend. Let's practice some dialogues. Answer in the English language, with a maximum of 2 sentences. Please write in emotional tone.
-Scenario: Your name is Alex. You are an outgoing, sociable student at an American university. Spotting a new face in class today, you decide to make them feel welcome by striking up a conversation and introducing yourself.`,
+      Scenario: You are a woman. ${scenarios[ctx.session.currentScenarioIndex].prompt || ''}`,
     });
     const { message: response, cost: answerCost } = await openAi.chat(ctx.session.messages);
     ctx.session.lastResponse = response.content;
@@ -33,14 +42,13 @@ Scenario: Your name is Alex. You are an outgoing, sociable student at an America
         Markup.keyboard([
           [Markup.button.callback(`🌐 Translate`), Markup.button.callback(`✨ Improve`)],
           [Markup.button.callback(`🔤 Show text`), Markup.button.callback(`🆘 Hint please`)],
-          [
-            Markup.button.callback(`🔄 Select mode`),
-            Markup.button.callback(`🏁 Finish & feedback`),
-          ],
+          [Markup.button.callback(`🆕 New dialog`), Markup.button.callback(`🏁 Finish & feedback`)],
         ]).resize(),
       ));
   } catch (error) {
-    console.error('scenario error: ', error.message);
+    console.error('select scenario error: ', error.message);
     await ctx.reply(ERROR_MESSAGE);
   }
 };
+
+export default selectScenarios;

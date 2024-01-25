@@ -11,7 +11,7 @@ export default async (ctx) => {
       ctx.session.messages = [];
       ctx.session.messages.push({
         role: openAi.roles.SYSTEM,
-        content: `Act as an English teacher and my best friend. Let's practice some dialogue. Be proactive, sometimes ask questions. Expand my answers, suggest other solutions, tell interesting stories or jokes. Write in an emotional tone. Answer in no more than 2 sentences.`,
+        content: `Act as an English teacher and my best friend. Let's practice some dialogue. You don't have to do the dialogue for two roles. Be proactive, sometimes ask questions. Expand my answers, suggest other solutions, tell interesting stories or jokes. Write in an emotional tone. Answer in no more than 2 sentences.`,
       });
       ctx.session.settings.mode = mode.topic;
     }

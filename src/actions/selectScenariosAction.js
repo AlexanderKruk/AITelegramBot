@@ -19,8 +19,9 @@ const selectScenarios = async (ctx, index) => {
     );
     ctx.session.messages.push({
       role: openAi.roles.SYSTEM,
-      content: `Act as an English language teacher and my best friend. Let's practice some dialogues. Answer in the English language, with a maximum of 2 sentences. Please write in emotional tone.
-      Scenario: You are a woman. ${scenarios[ctx.session.currentScenarioIndex].prompt || ''}`,
+      content: `Stick strictly to the scenario you're only responsible for one role. You don't have to do the dialogue for two roles. Be proactive, sometimes ask questions. Write in an emotional tone. Answer in no more than 2 sentences. Scenario: You are a woman. ${
+        scenarios[ctx.session.currentScenarioIndex].prompt || ''
+      }`,
     });
     const { message: response, cost: answerCost } = await openAi.chat(ctx.session.messages);
     ctx.session.lastResponse = response.content;

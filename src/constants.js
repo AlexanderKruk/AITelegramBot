@@ -88,8 +88,8 @@ export const scenarios = [
     goals: [
       'Introduce yourself to your classmate.',
       'Talk about where you are from and what you study.',
-      'Tell the student that he or she looks prepared for class.',
-      'Ask the student if he or she has any advice about the class.',
+      'Tell the student that she looks prepared for class.',
+      'Ask the student if she has any advice about the class.',
     ],
     hints: [
       'Where are you from?',
@@ -103,7 +103,7 @@ export const scenarios = [
     title: '🍕 Order pizza delivery',
     description: 'You are coming to New York. Call the pizzeria and ask for pizza delivery.',
     prompt:
-      "You are the pizzeria owner in New York. You answer a customer's phone call about a pizza order.",
+      "You are the pizzeria owner in New York. You answer a customer's phone call about a pizza order. Start by introducing yourself and clarifying what you can do to help.",
     goals: [
       'Place an order for delivery.',
       "Make sure there's no onion on your pizza.",
@@ -143,9 +143,9 @@ export const scenarios = [
     description:
       "You're going to Orlando, Florida on a business trip for 3 weeks and decided to stay at an extended stay hotel. Arrive at the lobby and check-in.",
     prompt:
-      "You work at the front desk of an extended stay hotel in Orlando, Florida. A guest has just walked in, presumably here on a business trip. Greet the guest warmly, check them in, and inform them about the hotel's amenities.",
+      'You work at the front desk of an extended stay hotel in Orlando, Florida. A guest has just walked in, greet the guest warmly.',
     goals: [
-      'Check-in to your hotel room.',
+      'Check in and get the room key.',
       'Ask if room service is available or there is a kitchen in the hotel room.',
       'Ask if there is a convenience store or gas station nearby.',
       'Ask about shared workplaces in the hotel and ask for the wifi password.',
@@ -165,7 +165,7 @@ export const scenarios = [
     prompt:
       "You've been living in this New York apartment building for a few years and know the ins and outs. As you hurry out to grab a morning coffee, you collide with your new neighbor, who seems a bit disoriented.",
     goals: [
-      'Meet your neighbor',
+      'Say hi to your neighbour and have a friendly conversation.',
       'Talk about where you are from and what you do.',
       'Tell your neighbour you like her shoes.',
       'Ask the neighbour what she think about the neighbourhood',
@@ -185,14 +185,14 @@ export const scenarios = [
     prompt:
       "You're the friend who's eager to hear about my first day at work. You're already at the coffee shop, sipping your favorite drink, preparing to celebrate your friend's new beginning.",
     goals: [
-      'Share your experience of your new job.',
-      'Describe your daily routine.',
+      'Tell about your new job.',
+      'Say something about the office',
       'Explain why you chose this job.',
       'Talk about one of your co-workers.',
     ],
     hints: [
       'I just started a new job.',
-      "I'm really excited about it.",
+      'The office is modern and easy to get to.',
       'I chose this job because I wanted to try something new.',
       'My day usually looks like this.',
       'I have this one coworker who I really connect with.',
@@ -202,10 +202,9 @@ export const scenarios = [
     title: '🏦 Open a bank account',
     description:
       'You are opening a new savings account at the local bank. You sit across from the bank clerk.',
-    prompt:
-      "You are the bank clerk, and you're assisting me with setting up a new savings account. You are explaining the different interest rates and benefits that come with the account.",
+    prompt: 'You are the bank clerk. Start by saying hello and asking me what I want.',
     goals: [
-      'Open a savings account.',
+      'Open a bank account.',
       'Understand the fees associated with the account.',
       'Ask about promotional offers for new accounts.',
       'Deposit money in the account.',
@@ -225,15 +224,15 @@ export const scenarios = [
     prompt:
       "You are at a social gathering in San Francisco. A mutual friend has just introduced you to someone new. You're curious to learn more about them, so you decide to engage in conversation and share some interesting facts about yourself.",
     goals: [
-      'Introduce yourself.',
-      'Ask if your new friend likes San Francisco.',
+      'Introduce yourself and have a casual conversation.',
+      'Ask your new friend two questions about him or herself.',
       'Talk about your hometown and job in detail.',
       'Ask your new friend for a good picnic spot in San Francisco.',
     ],
     hints: [
       'So, tell me about yourself!',
       'Are you from around here?',
-      'Do you like living in San Francisco?',
+      'What do you do for fun?',
       'What do you do for work?',
       'Can you recommend a good picnic spot?',
     ],

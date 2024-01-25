@@ -155,10 +155,7 @@ export default async (ctx) => {
                           .map((item, index) => `${index + 1}. ${item}`)
                           .join(' ')}`,
                       },
-                      {
-                        role: openAi.roles.USER,
-                        content: modifiedText,
-                      },
+                      ...ctx.session.messages.filter((item) => item.role === openAi.roles.USER),
                     ],
                   }.messages,
                   'gpt-4-1106-preview',

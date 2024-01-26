@@ -103,6 +103,11 @@ export default async (ctx) => {
         const modifiedText = /[A-Za-z]$/.test(text) ? `${text}.` : text;
         ctx.session.messages = cutLongTermMemory(ctx.session.messages, 16, 2);
         ctx.session.messages.push({ role: openAi.roles.USER, content: modifiedText });
+        ctx.session.userData.messagesHistory ??= [];
+        ctx.session.userData.messagesHistory.push({
+          role: openAi.roles.USER,
+          content: modifiedText,
+        });
         ctx.sendChatAction('typing');
 
         let pronounceScore;
@@ -155,7 +160,7 @@ export default async (ctx) => {
                           .map((item, index) => `${index + 1}. ${item}`)
                           .join(' ')}`,
                       },
-                      ...ctx.session.messages.filter((item) => item.role === openAi.roles.USER),
+                      ...ctx.session.messages.filter((item) => item.role !== openAi.roles.SYSTEM),
                     ],
                   }.messages,
                   'gpt-4-1106-preview',
@@ -304,6 +309,11 @@ export default async (ctx) => {
           throw new Error('globalResponse.content empty');
         }
         ctx.session.messages.push({
+          role: openAi.roles.ASSISTANT,
+          content: globalResponse.content,
+        });
+        ctx.session.userData.messagesHistory ??= [];
+        ctx.session.userData.messagesHistory.push({
           role: openAi.roles.ASSISTANT,
           content: globalResponse.content,
         });

@@ -29,6 +29,8 @@ const selectScenarios = async (ctx, index) => {
       role: openAi.roles.ASSISTANT,
       content: response.content,
     });
+    ctx.session.userData.messagesHistory ??= [];
+    ctx.session.userData.messagesHistory.push(...ctx.session.messages);
     const { mp3, cost: textToSpeechCost } = await textConverter.textToSpeech(
       response.content,
       ctx.session.settings.practiceLanguage,

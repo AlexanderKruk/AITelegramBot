@@ -36,6 +36,7 @@ export const userData = {
   userAudioMessages: 0,
   scenarioGoals: {},
   currentScenariosPage: 1,
+  messagesHistory: [],
 };
 
 export const INITIAL_SESSION = {
@@ -105,7 +106,7 @@ export const scenarios = [
     prompt:
       "You are the pizzeria owner in New York. You answer a customer's phone call about a pizza order. Start by introducing yourself and clarifying what you can do to help.",
     goals: [
-      'Place an order for delivery.',
+      'Order a pizza.',
       "Make sure there's no onion on your pizza.",
       'Ask about delivery time',
       'Ask for appetizer recommendation.',

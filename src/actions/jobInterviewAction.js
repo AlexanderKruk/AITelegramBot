@@ -14,12 +14,16 @@ export default async (ctx) => {
           ctx.session.settings?.interview?.position ? ctx.session.settings.interview.position : ''
         } position. I want you to answer only as the interviewer. Do not write all the questions at once. Do not write explanations. Answer shortly with a maximum of 3 sentences.`,
       });
+      ctx.session.userData.messagesHistory ??= [];
+      ctx.session.userData.messagesHistory.push(...ctx.session.messages);
       const { message: response, cost: answerCost } = await openAi.chat(ctx.session.messages);
       ctx.session.lastResponse = response.content;
       ctx.session.messages.push({
         role: openAi.roles.ASSISTANT,
         content: response.content,
       });
+      ctx.session.userData.messagesHistory ??= [];
+      ctx.session.userData.messagesHistory.push(...ctx.session.messages);
       const { mp3, cost: textToSpeechCost } = await textConverter.textToSpeech(
         response.content,
         ctx.session.settings.practiceLanguage,

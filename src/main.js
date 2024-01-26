@@ -81,6 +81,7 @@ bot.hears('✨ Improve', ga4.view('improve'), improveHears);
 bot.hears('🔤 Show text', ga4.view('show text'), showTextHears);
 bot.hears('🆘 Hint please', ga4.view('hint please'), hintPleaseHears);
 bot.hears('🆕 New dialog', ga4.view('new dialog '), selectModeHears);
+bot.hears('🔄 Select mode', ga4.view('select mode '), selectModeHears);
 bot.hears('🏁 Finish & feedback', ga4.view('finish & feedback hears'), finishAndFeedbackHears);
 
 bot.on(message('voice'), ga4.view('user voice message'), messageVoiceOn);

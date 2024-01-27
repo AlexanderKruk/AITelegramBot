@@ -87,13 +87,10 @@ export const cutLongTermMemory = (data, length, startFrom) => {
 
 export const calculateScenariosMenuButtons = (ctx) => {
   const buttons = [];
-  console.log(
-    'ctx.session.userData.currentScenariosPage',
-    ctx.session.userData.currentScenariosPage,
-  );
+  ctx.session.userData.currentScenariosPage ??= 1;
+  ctx.session.userData.scenarioGoals ??= {};
   for (let i = 0; i < 4; i += 1) {
     const index = i + (ctx.session.userData.currentScenariosPage - 1) * 4;
-    console.log('index', index);
     buttons.push([
       Markup.button.callback(
         `${scenarios[index].title} (${

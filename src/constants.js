@@ -85,7 +85,7 @@ export const scenarios = [
     description:
       'You are studying at an American university. When you entered the classroom on the first day of class, a friendly student sat next you and started talking to you.',
     prompt:
-      'Your name is Alex. You are an outgoing, sociable student at an American university. Spotting a new face in class today, you decide to make them feel welcome by striking up a conversation and introducing yourself.',
+      "Your name is Alex and you're in a psychology class. You are an outgoing, sociable student at an American university. Spotting a new face in class today, you decide to make them feel welcome by striking up a conversation and introducing yourself.",
     goals: [
       'Introduce yourself to your classmate.',
       'Talk about where you are from and what you study.',
@@ -104,7 +104,7 @@ export const scenarios = [
     title: '🍕 Order pizza delivery',
     description: 'You are coming to New York. Call the pizzeria and ask for pizza delivery.',
     prompt:
-      "You are the pizzeria owner in New York. You answer a customer's phone call about a pizza order. Start by introducing yourself and clarifying what you can do to help.",
+      "Your name is Maria and you work for the company BestPizza, which is based in New York. You answer a customer's phone call about a pizza order. Start by introducing yourself and clarifying what you can do to help.",
     goals: [
       'Order a pizza.',
       "Make sure there's no onion on your pizza.",
@@ -124,7 +124,7 @@ export const scenarios = [
     description:
       'On Friday night, your colleagues and you decided to meet at a sushi restaurant. Call the store, talk to the store manager, and reserve a seat.',
     prompt:
-      'As the store manager at a sushi restaurant, answer the call promptly and assist the customer with their reservation request. Ensure to inquire about the number of people in the party and ask if there are any special accommodations that might be needed. Provide a warm confirmation and let them know you look forward to welcoming them to the establishment.',
+      'Your name is Linda and you work for the company TastySushi. As the store manager at a sushi restaurant, answer the call promptly and assist the customer with their reservation request. Ensure to inquire about the number of people in the party and ask if there are any special accommodations that might be needed. Provide a warm confirmation and let them know you look forward to welcoming them to the establishment.',
     goals: [
       'Make a dinner reservation',
       'Ask if they have any availability for Friday at 6pm.',
@@ -144,7 +144,7 @@ export const scenarios = [
     description:
       "You're going to Orlando, Florida on a business trip for 3 weeks and decided to stay at an extended stay hotel. Arrive at the lobby and check-in.",
     prompt:
-      'You work at the front desk of an extended stay hotel in Orlando, Florida. A guest has just walked in, greet the guest warmly.',
+      'Your name is Susan and you work for the company ComfyHotel. You work at the front desk of an extended stay hotel in Orlando, Florida. A guest has just walked in, greet the guest warmly.',
     goals: [
       'Check in and get the room key.',
       'Ask if room service is available or there is a kitchen in the hotel room.',
@@ -164,7 +164,7 @@ export const scenarios = [
     description:
       'You just moved into an apartment in New York. When you go outside, you bumped into someone in the next room.',
     prompt:
-      "You've been living in this New York apartment building for a few years and know the ins and outs. As you hurry out to grab a morning coffee, you collide with your new neighbor, who seems a bit disoriented.",
+      "Your name is Bella. You've been living in this New York apartment building for a few years and know the ins and outs. As you hurry out to grab a morning coffee, you collide with your new neighbor, who seems a bit disoriented.",
     goals: [
       'Say hi to your neighbour and have a friendly conversation.',
       'Talk about where you are from and what you do.',
@@ -184,7 +184,7 @@ export const scenarios = [
     description:
       "You've just got a new job. You want to talk to your friend, so you meet her at the coffee shop after work.",
     prompt:
-      "You're the friend who's eager to hear about my first day at work. You're already at the coffee shop, sipping your favorite drink, preparing to celebrate your friend's new beginning.",
+      "Your name is Judy. You're the friend who's eager to hear about my first day at work. You're already at the coffee shop, sipping your favorite drink, preparing to celebrate your friend's new beginning.",
     goals: [
       'Tell about your new job.',
       'Say something about the office',
@@ -203,7 +203,8 @@ export const scenarios = [
     title: '🏦 Open a bank account',
     description:
       'You are opening a new savings account at the local bank. You sit across from the bank clerk.',
-    prompt: 'You are the bank clerk. Start by saying hello and asking me what I want.',
+    prompt:
+      'Your name is Helen you work in the CityBank. You are the bank clerk. Start by saying hello and asking me what I want.',
     goals: [
       'Open a bank account.',
       'Understand the fees associated with the account.',
@@ -223,7 +224,7 @@ export const scenarios = [
     description:
       "You were invited to a friend's party in San Francisco. You were introduced to a new person. Let's talk a lot to get to know each other.",
     prompt:
-      "You are at a social gathering in San Francisco. A mutual friend has just introduced you to someone new. You're curious to learn more about them, so you decide to engage in conversation and share some interesting facts about yourself.",
+      "Your name is Eliza. You are at a social gathering in San Francisco. A mutual friend has just introduced you to someone new. You're curious to learn more about them, so you decide to engage. Start with a short introduction.",
     goals: [
       'Introduce yourself and have a casual conversation.',
       'Ask your new friend two questions about him or herself.',
